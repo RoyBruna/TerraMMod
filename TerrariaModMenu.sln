@@ -1,0 +1,30 @@
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 18
+VisualStudioVersion = 18.0.0.0
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TerrariaModMenu.Bootstrapper", "src\TerrariaModMenu.Bootstrapper\TerrariaModMenu.Bootstrapper.vcxproj", "{7A4C8D91-2B5E-4F31-9C42-8E1D6A0B5F21}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TerrariaModMenu.Core", "src\TerrariaModMenu.Core\TerrariaModMenu.Core.csproj", "{4C2E9A61-7D83-4B15-8E0A-1F93C2B4D678}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TerrariaModMenu.Injector", "src\TerrariaModMenu.Injector\TerrariaModMenu.Injector.vcxproj", "{9B3F1E52-6C1A-4D78-A219-5E4B7C8D3A10}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|x86 = Debug|x86
+		Release|x86 = Release|x86
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{7A4C8D91-2B5E-4F31-9C42-8E1D6A0B5F21}.Debug|x86.ActiveCfg = Debug|Win32
+		{7A4C8D91-2B5E-4F31-9C42-8E1D6A0B5F21}.Debug|x86.Build.0 = Debug|Win32
+		{7A4C8D91-2B5E-4F31-9C42-8E1D6A0B5F21}.Release|x86.ActiveCfg = Release|Win32
+		{7A4C8D91-2B5E-4F31-9C42-8E1D6A0B5F21}.Release|x86.Build.0 = Release|Win32
+		{4C2E9A61-7D83-4B15-8E0A-1F93C2B4D678}.Debug|x86.ActiveCfg = Debug|x86
+		{4C2E9A61-7D83-4B15-8E0A-1F93C2B4D678}.Debug|x86.Build.0 = Debug|x86
+		{4C2E9A61-7D83-4B15-8E0A-1F93C2B4D678}.Release|x86.ActiveCfg = Release|x86
+		{4C2E9A61-7D83-4B15-8E0A-1F93C2B4D678}.Release|x86.Build.0 = Release|x86
+		{9B3F1E52-6C1A-4D78-A219-5E4B7C8D3A10}.Debug|x86.ActiveCfg = Debug|Win32
+		{9B3F1E52-6C1A-4D78-A219-5E4B7C8D3A10}.Debug|x86.Build.0 = Debug|Win32
+		{9B3F1E52-6C1A-4D78-A219-5E4B7C8D3A10}.Release|x86.ActiveCfg = Release|Win32
+		{9B3F1E52-6C1A-4D78-A219-5E4B7C8D3A10}.Release|x86.Build.0 = Release|Win32
+	EndGlobalSection
+EndGlobal

@@ -1,0 +1,10 @@
+bin/
+obj/
+dist/
+reports/
+.vs/
+*.user
+*.suo
+*.log
+*.cfg
+*.pdb
