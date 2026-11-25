@@ -7,8 +7,11 @@ namespace TerrariaModMenu.Core.UI
     internal static class DarkTheme
     {
         public static readonly Color BgWindow = Color.FromArgb(18, 20, 26);
+        public static readonly Color BgSidebar = Color.FromArgb(13, 15, 20);
         public static readonly Color BgPanel = Color.FromArgb(26, 29, 38);
         public static readonly Color BgInput = Color.FromArgb(34, 38, 50);
+        public static readonly Color BgHover = Color.FromArgb(24, 28, 38);
+        public static readonly Color BgSelected = Color.FromArgb(32, 38, 52);
         public static readonly Color Border = Color.FromArgb(52, 58, 74);
 
         public static readonly Color AccentBlue = Color.FromArgb(59, 130, 246);
@@ -20,11 +23,16 @@ namespace TerrariaModMenu.Core.UI
 
         public static readonly Color TextPrimary = Color.FromArgb(240, 244, 248);
         public static readonly Color TextSecondary = Color.FromArgb(156, 163, 175);
+        public static readonly Color TextMuted = Color.FromArgb(107, 114, 128);
 
         public static readonly Font FontNormal = new Font("Segoe UI", 9f, FontStyle.Regular);
         public static readonly Font FontBold = new Font("Segoe UI", 9f, FontStyle.Bold);
         public static readonly Font FontTitle = new Font("Segoe UI", 10.5f, FontStyle.Bold);
         public static readonly Font FontMono = new Font("Consolas", 8.5f, FontStyle.Regular);
+        public static readonly Font FontCategory = new Font("Segoe UI", 7.5f, FontStyle.Bold);
+        public static readonly Font FontNav = new Font("Segoe UI", 9f, FontStyle.Regular);
+        public static readonly Font FontNavBold = new Font("Segoe UI", 9f, FontStyle.Bold);
+        public static readonly Font FontTiny = new Font("Consolas", 7.5f, FontStyle.Regular);
 
         public static GroupBox CreateGroup(string title, int x, int y, int w, int h)
         {
@@ -178,49 +186,6 @@ namespace TerrariaModMenu.Core.UI
                 Font = FontNormal,
                 Text = placeholder
             };
-        }
-
-        public static TabControl CreateDarkTabs()
-        {
-            var tc = new TabControl
-            {
-                Dock = DockStyle.Fill,
-                DrawMode = TabDrawMode.OwnerDrawFixed,
-                SizeMode = TabSizeMode.Fixed,
-                ItemSize = new Size(76, 28),
-                Padding = new Point(4, 4),
-                Font = FontBold
-            };
-
-            tc.DrawItem += (_, e) =>
-            {
-                try
-                {
-                    TabPage page = tc.TabPages[e.Index];
-                    bool selected = (e.State & DrawItemState.Selected) == DrawItemState.Selected;
-                    Rectangle bounds = e.Bounds;
-
-                    using var bgBrush = new SolidBrush(selected ? BgPanel : BgWindow);
-                    e.Graphics.FillRectangle(bgBrush, bounds);
-
-                    if (selected)
-                    {
-                        using var accentBrush = new SolidBrush(AccentCyan);
-                        e.Graphics.FillRectangle(accentBrush, bounds.Left, bounds.Bottom - 3, bounds.Width, 3);
-                    }
-
-                    TextRenderer.DrawText(
-                        e.Graphics,
-                        page.Text,
-                        selected ? FontBold : FontNormal,
-                        bounds,
-                        selected ? TextPrimary : TextSecondary,
-                        TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter);
-                }
-                catch { }
-            };
-
-            return tc;
         }
     }
 }

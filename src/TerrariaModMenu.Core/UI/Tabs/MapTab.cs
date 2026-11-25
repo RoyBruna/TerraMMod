@@ -242,7 +242,7 @@ namespace TerrariaModMenu.Core.UI.Tabs
             AutoScroll = true;
             Padding = new Padding(8);
 
-            var grpMap = DarkTheme.CreateGroup("Interactive Full-World Map (Left-Click: Place Pin | Right/Double-Click: Teleport | Wheel: Zoom)", 8, 6, 538, 294);
+            var grpMap = DarkTheme.CreateGroup("Interactive World Map (L-Click: Pin | R/Dbl-Click: TP | Wheel: Zoom)", 8, 6, 538, 294);
 
             _canvas = new MapCanvas
             {
@@ -284,7 +284,7 @@ namespace TerrariaModMenu.Core.UI.Tabs
 
             var btnTpPin = DarkTheme.CreateButton("Teleport to Pin", 11, 250, 126, 32, DarkTheme.AccentGreen, TeleportToActivePin);
             var btnRender = DarkTheme.CreateButton("Render Full Map", 143, 250, 118, 32, DarkTheme.AccentBlue, RequestMapUpdate);
-            var btnSyncIngame = DarkTheme.CreateButton("Unlock In-Game Map", 267, 250, 134, 32, DarkTheme.AccentAmber, () =>
+            var btnSyncIngame = DarkTheme.CreateButton("Reveal In-Game", 267, 250, 134, 32, DarkTheme.AccentAmber, () =>
             {
                 GameActions.EnqueueRevealFullMap();
                 RequestMapUpdate();
