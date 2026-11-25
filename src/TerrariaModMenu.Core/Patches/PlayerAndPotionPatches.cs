@@ -19,9 +19,9 @@ namespace TerrariaModMenu.Core.Patches
 
             HarmonyManager.SafePatch(
                 harmony,
-                "Player.Update",
-                AccessTools.Method(typeof(Player), nameof(Player.Update), new[] { typeof(int) }),
-                postfix: AccessTools.Method(typeof(PlayerAndPotionPatches), nameof(Postfix_Update)));
+                "Player.BordersMovement",
+                AccessTools.Method(typeof(Player), nameof(Player.BordersMovement), Type.EmptyTypes),
+                postfix: AccessTools.Method(typeof(PlayerAndPotionPatches), nameof(Postfix_BordersMovement)));
 
             HarmonyManager.SafePatch(
                 harmony,
@@ -78,6 +78,12 @@ namespace TerrariaModMenu.Core.Patches
 
                 if (cfg.NoFallDamage) __instance.noFallDmg = true;
                 if (cfg.NoKnockback) __instance.noKnockback = true;
+
+                if (cfg.NoClip && !__instance.dead && !__instance.ghost)
+                {
+                    __instance.gravity = 0f;
+                    __instance.maxFallSpeed = 0f;
+                }
 
                 if (cfg.InfiniteFlight)
                 {
@@ -253,11 +259,11 @@ namespace TerrariaModMenu.Core.Patches
             }
         }
 
-        private static void Postfix_Update(Player __instance, int i)
+        private static void Postfix_BordersMovement(Player __instance)
         {
             try
             {
-                if (!ModRuntime.IsFullModeActive || __instance == null || i != Main.myPlayer || Main.gameMenu || __instance.dead || __instance.ghost)
+                if (!ModRuntime.IsFullModeActive || __instance == null || __instance.whoAmI != Main.myPlayer || Main.gameMenu || __instance.dead || __instance.ghost)
                 {
                     return;
                 }
@@ -274,7 +280,14 @@ namespace TerrariaModMenu.Core.Patches
                     if (move != Vector2.Zero)
                     {
                         move.Normalize();
-                        __instance.position += move * cfg.NoClipSpeed;
+                        Vector2 next = __instance.position + move * cfg.NoClipSpeed;
+                        float minX = Main.leftWorld + 640f;
+                        float maxX = Main.rightWorld - 640f - __instance.width;
+                        float minY = Main.topWorld + 640f;
+                        float maxY = Main.bottomWorld - 640f - __instance.height;
+                        next.X = Math.Max(minX, Math.Min(maxX, next.X));
+                        next.Y = Math.Max(minY, Math.Min(maxY, next.Y));
+                        __instance.position = next;
                     }
 
                     __instance.velocity = Vector2.Zero;
@@ -283,7 +296,7 @@ namespace TerrariaModMenu.Core.Patches
             }
             catch (Exception ex)
             {
-                ModLogger.Error("PlayerAndPotionPatches.Update", ex);
+                ModLogger.Error("PlayerAndPotionPatches.BordersMovement", ex);
             }
         }
 

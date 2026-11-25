@@ -1,8 +1,15 @@
 using System;
+using System.Collections.Concurrent;
+using System.Diagnostics;
 using System.IO;
 using System.Reflection;
+using System.Runtime.ExceptionServices;
+using System.Security;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
+using Terraria;
+using Terraria.Testing;
 using TerrariaModMenu.Core.Patches;
 
 namespace TerrariaModMenu.Core.Core
@@ -10,8 +17,12 @@ namespace TerrariaModMenu.Core.Core
     internal static class CrashReporter
     {
         private static readonly object Sync = new object();
+        private static readonly ConcurrentDictionary<string, long> FirstChanceThrottle = new ConcurrentDictionary<string, long>();
         private static string _baseDir = string.Empty;
         private static bool _installed;
+        private static int _firstChanceCount;
+        [ThreadStatic]
+        private static bool _inFirstChance;
 
         public static void Install(string baseDirectory)
         {
@@ -37,9 +48,76 @@ namespace TerrariaModMenu.Core.Core
                     args.SetObserved();
                 };
 
+                AppDomain.CurrentDomain.FirstChanceException += OnFirstChanceException;
+
                 _installed = true;
                 ModLogger.Info($"CrashReporter initialized ({_baseDir}).");
             }
+        }
+
+        private static void OnFirstChanceException(object? sender, FirstChanceExceptionEventArgs args)
+        {
+            if (_inFirstChance || _firstChanceCount >= 25)
+            {
+                return;
+            }
+
+            Exception? ex = args.Exception;
+            if (ex == null || !IsTrackedException(ex))
+            {
+                return;
+            }
+
+            _inFirstChance = true;
+            try
+            {
+                var st = new StackTrace(1, false);
+                string trace = st.ToString();
+                if (trace.IndexOf("Terraria.Player", StringComparison.Ordinal) < 0 &&
+                    trace.IndexOf("Terraria.Projectile", StringComparison.Ordinal) < 0 &&
+                    trace.IndexOf("TerrariaModMenu", StringComparison.Ordinal) < 0 &&
+                    trace.IndexOf("Harmony", StringComparison.Ordinal) < 0 &&
+                    trace.IndexOf("_Patch", StringComparison.Ordinal) < 0)
+                {
+                    return;
+                }
+
+                MethodBase? frameMethod = st.FrameCount > 0 ? st.GetFrame(0)?.GetMethod() : null;
+                string site = frameMethod != null
+                    ? $"{frameMethod.DeclaringType?.FullName}.{frameMethod.Name}"
+                    : "unknown";
+                string key = $"{ex.GetType().FullName}|{site}";
+                long now = Environment.TickCount;
+                if (FirstChanceThrottle.TryGetValue(key, out long prev) && (now - prev) < 15000)
+                {
+                    return;
+                }
+
+                FirstChanceThrottle[key] = now;
+                Interlocked.Increment(ref _firstChanceCount);
+                ModLogger.Info($"FIRST-CHANCE {ex.GetType().FullName}: {ex.Message} @ {site}\n{trace}");
+            }
+            catch
+            {
+            }
+            finally
+            {
+                _inFirstChance = false;
+            }
+        }
+
+        private static bool IsTrackedException(Exception ex)
+        {
+            return ex is NullReferenceException ||
+                   ex is InvalidProgramException ||
+                   ex is IndexOutOfRangeException ||
+                   ex is ArgumentOutOfRangeException ||
+                   ex is MissingMethodException ||
+                   ex is MissingFieldException ||
+                   ex is TypeLoadException ||
+                   ex is BadImageFormatException ||
+                   ex is AccessViolationException ||
+                   ex is VerificationException;
         }
 
         public static string WriteReport(string source, Exception? ex, bool isTerminating)
@@ -123,6 +201,13 @@ namespace TerrariaModMenu.Core.Core
                 if (snap.HeldItem.Valid)
                 {
                     sb.AppendLine($"  Held='{snap.HeldItem.Name}' (id={snap.HeldItem.Type}, cat={snap.HeldItem.Category}, dmg={snap.HeldItem.Damage}, ut={snap.HeldItem.UseTime})");
+                }
+                sb.AppendLine($"  Loop: GameUpdateCount={Main.GameUpdateCount}, gameMenu={Main.gameMenu}, gamePaused={Main.gamePaused}, CanUpdateGameplay={Main.CanUpdateGameplay}, blockInput={Main.blockInput}, chat={Main.drawingPlayerChat}");
+                sb.AppendLine($"  Focus: IsSelected={FocusHelper.IsSelectedApplication}, GameplayActive={FocusHelper.GameplayActive}, StepperPaused={WorldUpdateStepper.Paused}, ignoreErrors={Main.ignoreErrors}");
+                if (GameState.TryGetLocalPlayer(out Player? lp) && lp != null)
+                {
+                    sb.AppendLine($"  Player: pos=({lp.position.X:0.0},{lp.position.Y:0.0}), vel=({lp.velocity.X:0.00},{lp.velocity.Y:0.00}), dead={lp.dead}, ghost={lp.ghost}, CCed={lp.CCed}, frozen={lp.frozen}, stoned={lp.stoned}, webbed={lp.webbed}");
+                    sb.AppendLine($"  Controls: U={lp.controlUp}, D={lp.controlDown}, L={lp.controlLeft}, R={lp.controlRight}, Jump={lp.controlJump}, Use={lp.controlUseItem}");
                 }
             }
             catch (Exception snapEx)

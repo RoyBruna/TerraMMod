@@ -25,12 +25,6 @@ namespace TerrariaModMenu.Core.Patches
                     typeof(NewProjectileModifier)
                 }),
                 postfix: AccessTools.Method(typeof(ProjectilePatches), nameof(Postfix_NewProjectile)));
-
-            HarmonyManager.SafePatch(
-                harmony,
-                "Projectile.AI",
-                AccessTools.Method(typeof(Projectile), nameof(Projectile.AI), Type.EmptyTypes),
-                postfix: AccessTools.Method(typeof(ProjectilePatches), nameof(Postfix_ProjectileAI)));
         }
 
         private static bool IsEligibleCombatProjectile(Projectile? p)
@@ -139,13 +133,21 @@ namespace TerrariaModMenu.Core.Patches
                     return;
                 }
 
+                ModConfig cfg = ModConfig.Instance;
+                if (!cfg.ProjectileMultishotEnabled &&
+                    !cfg.ProjectileNoTileCollide &&
+                    !cfg.ProjectileInfinitePierce &&
+                    cfg.ProjectileSpeedMultiplier <= 1.01f)
+                {
+                    return;
+                }
+
                 Projectile? orig = Main.projectile?[__result];
                 if (!IsEligibleCombatProjectile(orig) || orig == null)
                 {
                     return;
                 }
 
-                ModConfig cfg = ModConfig.Instance;
                 ApplySpawnModifiers(orig, cfg);
 
                 if (!cfg.ProjectileMultishotEnabled || cfg.ProjectileMultishotCount <= 1)
@@ -211,75 +213,93 @@ namespace TerrariaModMenu.Core.Patches
             }
         }
 
-        private static void Postfix_ProjectileAI(Projectile __instance)
+        public static void TickActiveProjectiles()
         {
             try
             {
-                if (!ModRuntime.IsFullModeActive || Main.gameMenu || !IsEligibleCombatProjectile(__instance))
+                if (!ModRuntime.IsFullModeActive || Main.gameMenu || Main.projectile == null)
                 {
                     return;
                 }
 
                 ModConfig cfg = ModConfig.Instance;
-
-                if (cfg.ProjectileNoTileCollide)
-                {
-                    __instance.tileCollide = false;
-                }
-
-                if (!cfg.ProjectileUniversalHoming || Main.npc == null)
+                if (!cfg.ProjectileNoTileCollide && !cfg.ProjectileUniversalHoming)
                 {
                     return;
                 }
 
+                Projectile[] projectiles = Main.projectile;
+                int limit = Math.Min(Main.maxProjectiles, projectiles.Length);
+                bool homing = cfg.ProjectileUniversalHoming && Main.npc != null;
                 float maxDistSq = cfg.ProjectileHomingRange * cfg.ProjectileHomingRange;
-                Vector2 origin = __instance.Center;
-                NPC? bestTarget = null;
-                float bestDistSq = maxDistSq;
+                float turn = Math.Max(0.05f, Math.Min(0.6f, cfg.ProjectileHomingTurn));
 
-                for (int i = 0; i < Main.npc.Length; i++)
+                for (int pIdx = 0; pIdx < limit; pIdx++)
                 {
-                    NPC? npc = Main.npc[i];
-                    if (npc == null || !npc.CanBeChasedBy(__instance, false))
+                    Projectile? proj = projectiles[pIdx];
+                    if (!IsEligibleCombatProjectile(proj) || proj == null)
                     {
                         continue;
                     }
 
-                    float dSq = Vector2.DistanceSquared(origin, npc.Center);
-                    if (dSq < bestDistSq)
+                    if (cfg.ProjectileNoTileCollide)
                     {
-                        bestDistSq = dSq;
-                        bestTarget = npc;
+                        proj.tileCollide = false;
                     }
-                }
 
-                if (bestTarget == null)
-                {
-                    return;
-                }
+                    if (!homing)
+                    {
+                        continue;
+                    }
 
-                Vector2 toTarget = bestTarget.Center - origin;
-                float dist = toTarget.Length();
-                if (dist < 1f)
-                {
-                    return;
-                }
+                    Vector2 origin = proj.Center;
+                    NPC? bestTarget = null;
+                    float bestDistSq = maxDistSq;
+                    NPC[] npcs = Main.npc!;
 
-                float currentSpeed = __instance.velocity.Length();
-                float targetSpeed = Math.Max(currentSpeed, 10f);
-                Vector2 desiredVel = (toTarget / dist) * targetSpeed;
-                float turn = Math.Max(0.05f, Math.Min(0.6f, cfg.ProjectileHomingTurn));
+                    for (int i = 0; i < npcs.Length; i++)
+                    {
+                        NPC? npc = npcs[i];
+                        if (npc == null || !npc.CanBeChasedBy(proj, false))
+                        {
+                            continue;
+                        }
 
-                Vector2 steered = Vector2.Lerp(__instance.velocity, desiredVel, turn);
-                float steeredLen = steered.Length();
-                if (steeredLen > 0.01f)
-                {
-                    __instance.velocity = steered * (targetSpeed / steeredLen);
+                        float dSq = Vector2.DistanceSquared(origin, npc.Center);
+                        if (dSq < bestDistSq)
+                        {
+                            bestDistSq = dSq;
+                            bestTarget = npc;
+                        }
+                    }
+
+                    if (bestTarget == null)
+                    {
+                        continue;
+                    }
+
+                    Vector2 toTarget = bestTarget.Center - origin;
+                    float dist = toTarget.Length();
+                    if (dist < 1f)
+                    {
+                        continue;
+                    }
+
+                    float currentSpeed = proj.velocity.Length();
+                    float targetSpeed = Math.Max(currentSpeed, 10f);
+                    Vector2 desiredVel = (toTarget / dist) * targetSpeed;
+
+                    Vector2 steered = Vector2.Lerp(proj.velocity, desiredVel, turn);
+                    float steeredLen = steered.Length();
+                    if (steeredLen > 0.01f)
+                    {
+                        proj.velocity = steered * (targetSpeed / steeredLen);
+                    }
                 }
             }
             catch (Exception ex)
             {
-                ModLogger.Error("ProjectilePatches.ProjectileAI", ex);
+                ModLogger.Error("ProjectilePatches.TickActiveProjectiles", ex);
             }
         }
     }

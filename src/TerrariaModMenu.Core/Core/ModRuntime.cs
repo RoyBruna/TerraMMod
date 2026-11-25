@@ -19,6 +19,8 @@ namespace TerrariaModMenu.Core.Core
         private static volatile bool _installPending;
         private static volatile bool _uninstallPending;
         private static volatile bool _hooksReady;
+        private static uint _lastWorldTick;
+        private static bool _wasTimeFrozen;
         private static readonly ManualResetEventSlim UninstallDone = new ManualResetEventSlim(false);
 
         public static LaunchMode CurrentMode { get; private set; } = LaunchMode.Full;
@@ -142,10 +144,19 @@ namespace TerrariaModMenu.Core.Core
                     Main.dayTime = cfg.FrozenDayTime;
                     Main.time = cfg.FrozenTimeValue;
                     Main.dayRate = 0;
+                    _wasTimeFrozen = true;
                 }
-                else if (cfg.CustomDayRate != 1)
+                else if (_wasTimeFrozen || cfg.CustomDayRate != 1)
                 {
                     Main.dayRate = cfg.CustomDayRate;
+                    _wasTimeFrozen = false;
+                }
+
+                uint currentTick = Main.GameUpdateCount;
+                if (currentTick != _lastWorldTick)
+                {
+                    _lastWorldTick = currentTick;
+                    ProjectilePatches.TickActiveProjectiles();
                 }
             }
             catch (Exception ex)

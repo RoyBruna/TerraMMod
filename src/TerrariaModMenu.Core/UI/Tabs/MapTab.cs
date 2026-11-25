@@ -255,7 +255,13 @@ namespace TerrariaModMenu.Core.UI.Tabs
             _canvas.MouseUp += OnCanvasMouseUp;
             _canvas.MouseDoubleClick += OnCanvasDoubleClick;
             _canvas.MouseWheel += OnCanvasMouseWheel;
-            _canvas.MouseEnter += (_, _) => _canvas.Focus();
+            _canvas.MouseEnter += (_, _) =>
+            {
+                if (Form.ActiveForm == FindForm())
+                {
+                    _canvas.Focus();
+                }
+            };
 
             _lblCoords = new Label
             {
