@@ -58,7 +58,7 @@ Running `dist\TerrariaModMenu.exe` prompts for the execution mode (or accepts `-
 
 | Mode | Environment | Behavior |
 | :--- | :--- | :--- |
-| **Full Mode** (`--full`) | Single-Player (`netMode == 0`) | Installs all 17 Harmony hooks synchronously on the game thread and enables all tabs. Automatically pauses gameplay hooks if `Main.netMode != 0`. |
+| **Full Mode** (`--full`) | Single-Player (`netMode == 0`) | Installs all 19 Harmony hooks synchronously on the game thread and enables all tabs. Automatically pauses gameplay hooks if `Main.netMode != 0`. |
 | **Safe Mode** (`--safe`) | Multiplayer / Read-Only | Installs zero Harmony hooks. Opens the Splash Screen and UI strictly for live telemetry, diagnostics, and read-only inspection. |
 
 ---
@@ -66,7 +66,7 @@ Running `dist\TerrariaModMenu.exe` prompts for the execution mode (or accepts `-
 ## Features
 
 1. **Survival**: Native God Mode (`creativeGodMode`), zero-cost Infinite Mana, No Fall Damage, Infinite Flight, Breath/Lava/Water Walk, No Knockback, NoClip WASD movement, instant Full Heal, Reveal Full World Map, and live player stat modifiers (Move Speed, Jump Boost, Defense, Life Regen, Tile Reach, Mining/Build Speed, Global Damage, Crit Chance).
-2. **Combat**: Category-separated Rapid Fire (Melee, Ranged, Magic/Summon, Throwables/Explosives, Tools, Blocks) with independent tick sliders, Force Auto-Reuse, Infinite Ammo/Throwables/Blocks, and a live Held Item Inspector and Editor.
+2. **Combat**: Category-separated Rapid Fire (Melee, Ranged, Magic/Summon, Throwables/Explosives, Tools, Blocks) with independent tick sliders, Force Auto-Reuse, Infinite Ammo/Throwables/Blocks, a live Held Item Inspector and Editor, and Projectile Madness (Multishot fan spread, Universal Homing, Wall-Pierce, Infinite Enemy Pierce, and Projectile Velocity scaling).
 3. **Crafting**: Independent overrides for Ignore Crafting Stations, Free Crafting (no ingredient consumption), and Unlock All Recipes, plus quick presets.
 4. **Potions**: Infinite buff duration, automatic debuff purge, zero Potion/Mana Sickness, infinite potion stacks, full heal/mana potions, customizable potion power amplifier (`1x` to `20x`), buff packs, and a searchable buff injector.
 5. **Spawner & World**: Live searchable Item Spawner (stack and prefix selection), Fullbright (`LightMap.Blur` override), vision flags (Spelunker, Hunter, Dangersense, Night Vision), Full Map Reveal / Clear Map, time controls, enemy spawn rate multiplier (`0x` to `20x`), and Spawn / Cursor teleportation (`F3`).

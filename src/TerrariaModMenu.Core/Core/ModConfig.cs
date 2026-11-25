@@ -43,6 +43,16 @@ namespace TerrariaModMenu.Core.Core
         public volatile bool InfiniteThrowables;
         public volatile bool InfiniteBlocks;
 
+        public volatile bool ProjectileMultishotEnabled;
+        public volatile int ProjectileMultishotCount = 3;
+        public volatile float ProjectileMultishotSpreadDeg = 24f;
+        public volatile bool ProjectileUniversalHoming;
+        public volatile float ProjectileHomingRange = 1100f;
+        public volatile float ProjectileHomingTurn = 0.22f;
+        public volatile bool ProjectileNoTileCollide;
+        public volatile bool ProjectileInfinitePierce;
+        public volatile float ProjectileSpeedMultiplier = 1.0f;
+
         public volatile bool CraftIgnoreStations;
         public volatile bool CraftFreeNoConsume;
         public volatile bool CraftUnlockAllRecipes;
@@ -139,6 +149,16 @@ namespace TerrariaModMenu.Core.Core
             InfiniteAmmo = false;
             InfiniteThrowables = false;
             InfiniteBlocks = false;
+
+            ProjectileMultishotEnabled = false;
+            ProjectileMultishotCount = 3;
+            ProjectileMultishotSpreadDeg = 24f;
+            ProjectileUniversalHoming = false;
+            ProjectileHomingRange = 1100f;
+            ProjectileHomingTurn = 0.22f;
+            ProjectileNoTileCollide = false;
+            ProjectileInfinitePierce = false;
+            ProjectileSpeedMultiplier = 1.0f;
 
             CraftIgnoreStations = false;
             CraftFreeNoConsume = false;

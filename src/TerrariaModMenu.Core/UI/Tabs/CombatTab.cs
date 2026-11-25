@@ -19,6 +19,16 @@ namespace TerrariaModMenu.Core.UI.Tabs
         private readonly CheckBox _chkInfThrow;
         private readonly CheckBox _chkInfBlocks;
 
+        private readonly CheckBox _chkMultishot;
+        private readonly CheckBox _chkHoming;
+        private readonly CheckBox _chkWallPierce;
+        private readonly CheckBox _chkInfPierce;
+        private readonly TrackBar _barMultiCount;
+        private readonly TrackBar _barMultiSpread;
+        private readonly TrackBar _barHomingRange;
+        private readonly TrackBar _barHomingTurn;
+        private readonly TrackBar _barProjSpeed;
+
         private readonly Label _lblHeldInfo;
         private readonly NumericUpDown _numDmg;
         private readonly NumericUpDown _numCrit;
@@ -101,6 +111,38 @@ namespace TerrariaModMenu.Core.UI.Tabs
             grpEditor.Controls.AddRange(new Control[] { btnApply, btnOpPreset, btnReset });
 
             Controls.Add(grpEditor);
+
+            var grpProj = DarkTheme.CreateGroup("Projectile Madness (Multishot, Homing & Wall-Pierce)", 8, 466, 538, 198);
+
+            _chkMultishot = DarkTheme.CreateCheck("Multishot / Shotgun Fan", 12, 24, cfg.ProjectileMultishotEnabled, v => cfg.ProjectileMultishotEnabled = v);
+            _chkMultishot.ForeColor = DarkTheme.AccentAmber;
+            _chkMultishot.Font = DarkTheme.FontBold;
+            grpProj.Controls.Add(_chkMultishot);
+
+            (_barMultiCount, _) = DarkTheme.CreateSliderRow(grpProj, "Projectiles per Shot", 12, 48, 244, 2, 10, cfg.ProjectileMultishotCount,
+                v => $"{v}x", v => cfg.ProjectileMultishotCount = v);
+            (_barMultiSpread, _) = DarkTheme.CreateSliderRow(grpProj, "Spread Cone Angle", 12, 92, 244, 5, 90, (int)cfg.ProjectileMultishotSpreadDeg,
+                v => $"{v} deg", v => cfg.ProjectileMultishotSpreadDeg = v);
+
+            _chkHoming = DarkTheme.CreateCheck("Universal Homing", 280, 24, cfg.ProjectileUniversalHoming, v => cfg.ProjectileUniversalHoming = v);
+            _chkHoming.ForeColor = DarkTheme.AccentCyan;
+            _chkHoming.Font = DarkTheme.FontBold;
+            grpProj.Controls.Add(_chkHoming);
+
+            (_barHomingRange, _) = DarkTheme.CreateSliderRow(grpProj, "Homing Lock Range", 280, 48, 244, 400, 2400, (int)cfg.ProjectileHomingRange,
+                v => $"{v} px", v => cfg.ProjectileHomingRange = v);
+            (_barHomingTurn, _) = DarkTheme.CreateSliderRow(grpProj, "Homing Turn Strength", 280, 92, 244, 8, 45, (int)(cfg.ProjectileHomingTurn * 100f),
+                v => $"{v}%", v => cfg.ProjectileHomingTurn = v / 100f);
+
+            _chkWallPierce = DarkTheme.CreateCheck("Wall-Pierce (Through Blocks)", 12, 142, cfg.ProjectileNoTileCollide, v => cfg.ProjectileNoTileCollide = v);
+            _chkInfPierce = DarkTheme.CreateCheck("Infinite Enemy Pierce", 12, 166, cfg.ProjectileInfinitePierce, v => cfg.ProjectileInfinitePierce = v);
+            grpProj.Controls.Add(_chkWallPierce);
+            grpProj.Controls.Add(_chkInfPierce);
+
+            (_barProjSpeed, _) = DarkTheme.CreateSliderRow(grpProj, "Projectile Velocity", 280, 140, 244, 10, 40, (int)(cfg.ProjectileSpeedMultiplier * 10f),
+                v => $"{v / 10f:0.0}x", v => cfg.ProjectileSpeedMultiplier = v / 10f);
+
+            Controls.Add(grpProj);
         }
 
         private static CheckBox AddRapidRow(
@@ -217,6 +259,15 @@ namespace TerrariaModMenu.Core.UI.Tabs
             _chkInfAmmo.Checked = cfg.InfiniteAmmo;
             _chkInfThrow.Checked = cfg.InfiniteThrowables;
             _chkInfBlocks.Checked = cfg.InfiniteBlocks;
+            _chkMultishot.Checked = cfg.ProjectileMultishotEnabled;
+            _chkHoming.Checked = cfg.ProjectileUniversalHoming;
+            _chkWallPierce.Checked = cfg.ProjectileNoTileCollide;
+            _chkInfPierce.Checked = cfg.ProjectileInfinitePierce;
+            _barMultiCount.Value = cfg.ProjectileMultishotCount;
+            _barMultiSpread.Value = (int)cfg.ProjectileMultishotSpreadDeg;
+            _barHomingRange.Value = (int)cfg.ProjectileHomingRange;
+            _barHomingTurn.Value = (int)(cfg.ProjectileHomingTurn * 100f);
+            _barProjSpeed.Value = (int)(cfg.ProjectileSpeedMultiplier * 10f);
         }
     }
 }
