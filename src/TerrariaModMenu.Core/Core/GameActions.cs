@@ -366,6 +366,89 @@ namespace TerrariaModMenu.Core.Core
             });
         }
 
+        public static void EnqueueTeleportToTile(int tileX, int tileY, string? label = null)
+        {
+            GameDispatcher.Enqueue(() =>
+            {
+                if (!GameState.TryGetLocalPlayer(out Player? player) || player == null)
+                {
+                    return;
+                }
+
+                int clampedX = Math.Max(45, Math.Min(Main.maxTilesX - 45, tileX));
+                int clampedY = Math.Max(45, Math.Min(Main.maxTilesY - 45, tileY));
+                Vector2 target = new Vector2(clampedX * 16f, (clampedY - 2) * 16f);
+                player.Teleport(target, 1, 0);
+                player.velocity = Vector2.Zero;
+                player.fallStart = clampedY;
+
+                string tag = string.IsNullOrWhiteSpace(label) ? $"({clampedX}, {clampedY})" : $"{label} ({clampedX}, {clampedY})";
+                Main.NewText($"[ModMenu] Teleported to {tag}", 110, 231, 183);
+            });
+        }
+
+        public static void EnqueueTeleportLandmark(string landmark)
+        {
+            GameDispatcher.Enqueue(() =>
+            {
+                if (!GameState.TryGetLocalPlayer(out Player? player) || player == null)
+                {
+                    return;
+                }
+
+                int tx = Main.spawnTileX;
+                int ty = Main.spawnTileY;
+
+                switch (landmark)
+                {
+                    case "Spawn":
+                        tx = Main.spawnTileX;
+                        ty = Main.spawnTileY;
+                        break;
+                    case "Bed":
+                        if (player.SpawnX >= 0 && player.SpawnY >= 0)
+                        {
+                            tx = player.SpawnX;
+                            ty = player.SpawnY;
+                        }
+                        break;
+                    case "Dungeon":
+                        if (Main.dungeonX > 0 && Main.dungeonY > 0)
+                        {
+                            tx = Main.dungeonX;
+                            ty = Main.dungeonY;
+                        }
+                        break;
+                    case "Death":
+                        if (player.showLastDeath)
+                        {
+                            tx = (int)(player.lastDeathPostion.X / 16f);
+                            ty = (int)(player.lastDeathPostion.Y / 16f);
+                        }
+                        break;
+                    case "LeftOcean":
+                        tx = 180;
+                        ty = Math.Max(120, (int)Main.worldSurface - 20);
+                        break;
+                    case "RightOcean":
+                        tx = Main.maxTilesX - 180;
+                        ty = Math.Max(120, (int)Main.worldSurface - 20);
+                        break;
+                    case "Hell":
+                        tx = Main.maxTilesX / 2;
+                        ty = Main.maxTilesY - 140;
+                        break;
+                }
+
+                int clampedX = Math.Max(45, Math.Min(Main.maxTilesX - 45, tx));
+                int clampedY = Math.Max(45, Math.Min(Main.maxTilesY - 45, ty));
+                player.Teleport(new Vector2(clampedX * 16f, (clampedY - 2) * 16f), 1, 0);
+                player.velocity = Vector2.Zero;
+                player.fallStart = clampedY;
+                Main.NewText($"[ModMenu] Teleported to {landmark} ({clampedX}, {clampedY})", 96, 165, 250);
+            });
+        }
+
         public static void EnqueueSetTime(bool dayTime, double time)
         {
             GameDispatcher.Enqueue(() =>

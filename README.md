@@ -70,7 +70,8 @@ Running `dist\TerrariaModMenu.exe` prompts for the execution mode (or accepts `-
 3. **Crafting**: Independent overrides for Ignore Crafting Stations, Free Crafting (no ingredient consumption), and Unlock All Recipes, plus quick presets.
 4. **Potions**: Infinite buff duration, automatic debuff purge, zero Potion/Mana Sickness, infinite potion stacks, full heal/mana potions, customizable potion power amplifier (`1x` to `20x`), buff packs, and a searchable buff injector.
 5. **Spawner & World**: Live searchable Item Spawner (stack and prefix selection), Fullbright (`LightMap.Blur` override), vision flags (Spelunker, Hunter, Dangersense, Night Vision), Full Map Reveal / Clear Map, time controls, enemy spawn rate multiplier (`0x` to `20x`), and Spawn / Cursor teleportation (`F3`).
-6. **Settings & Diagnostics**: Always-on-Top toggle, window opacity slider, `INSERT` hotkey to toggle visibility, Credits panel, manual diagnostic report export, and live Harmony hook inspector.
+6. **Interactive World Map & Radar**: Full-world revealed map renderer (`MapHelper.CreateMapTile` + `GetMapTileXnaColor`) with target pin placement, click/double-click teleportation, `1x` to `16x` zoom and middle-mouse pan, live radar markers (Player, World Spawn, Bed, Dungeon, Last Death, Town NPCs, Bosses), quick landmark buttons, and custom saved waypoints.
+7. **Settings & Diagnostics**: Always-on-Top toggle, window opacity slider, `INSERT` hotkey to toggle visibility, Credits panel, manual diagnostic report export, and live Harmony hook inspector.
 
 ---
 

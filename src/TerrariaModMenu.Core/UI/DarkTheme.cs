@@ -187,8 +187,8 @@ namespace TerrariaModMenu.Core.UI
                 Dock = DockStyle.Fill,
                 DrawMode = TabDrawMode.OwnerDrawFixed,
                 SizeMode = TabSizeMode.Fixed,
-                ItemSize = new Size(89, 28),
-                Padding = new Point(6, 4),
+                ItemSize = new Size(76, 28),
+                Padding = new Point(4, 4),
                 Font = FontBold
             };
 

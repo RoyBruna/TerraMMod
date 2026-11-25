@@ -27,6 +27,7 @@ namespace TerrariaModMenu.Core.UI
         private readonly CraftingTab _craftingTab;
         private readonly PotionsTab _potionsTab;
         private readonly SpawnerWorldTab _spawnerTab;
+        private readonly MapTab _mapTab;
         private readonly SettingsTab _settingsTab;
 
         private bool _prevInsertDown;
@@ -142,6 +143,7 @@ namespace TerrariaModMenu.Core.UI
             _craftingTab = new CraftingTab();
             _potionsTab = new PotionsTab();
             _spawnerTab = new SpawnerWorldTab();
+            _mapTab = new MapTab();
             _settingsTab = new SettingsTab(this, ResetAllDefaults, Close);
 
             if (safeMode)
@@ -151,6 +153,7 @@ namespace TerrariaModMenu.Core.UI
                 ApplySafeModeLock(_craftingTab);
                 ApplySafeModeLock(_potionsTab);
                 ApplySafeModeLock(_spawnerTab);
+                ApplySafeModeLock(_mapTab);
             }
 
             tabs.TabPages.Add(WrapTab("Survival", _survivalTab));
@@ -158,11 +161,12 @@ namespace TerrariaModMenu.Core.UI
             tabs.TabPages.Add(WrapTab("Crafting", _craftingTab));
             tabs.TabPages.Add(WrapTab("Potions", _potionsTab));
             tabs.TabPages.Add(WrapTab("Spawner", _spawnerTab));
+            tabs.TabPages.Add(WrapTab("Map", _mapTab));
             tabs.TabPages.Add(WrapTab("Settings", _settingsTab));
 
             if (safeMode)
             {
-                tabs.SelectedIndex = 5;
+                tabs.SelectedIndex = 6;
             }
 
             tabs.SelectedIndexChanged += (_, _) =>
@@ -171,7 +175,8 @@ namespace TerrariaModMenu.Core.UI
                 {
                     if (tabs.SelectedIndex == 3) _potionsTab.EnsureCatalogLoaded();
                     else if (tabs.SelectedIndex == 4) _spawnerTab.EnsureCatalogLoaded();
-                    else if (tabs.SelectedIndex == 5) _settingsTab.RefreshDiagnostics();
+                    else if (tabs.SelectedIndex == 5) _mapTab.OnTabSelected();
+                    else if (tabs.SelectedIndex == 6) _settingsTab.RefreshDiagnostics();
                 }
                 catch (Exception ex)
                 {
