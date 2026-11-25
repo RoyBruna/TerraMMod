@@ -27,11 +27,7 @@ namespace TerrariaModMenu.Core
 
                 ModLogger.Initialize(_baseDirectory);
                 InstallAssemblyResolver();
-                CrashReporter.Install(_baseDirectory);
-                ModRuntime.LoadLaunchMode(_baseDirectory);
-
-                ModLogger.Info($"EntryPoint invoked (dir='{_baseDirectory}', mode={ModRuntime.CurrentMode}, x64={Environment.Is64BitProcess}).");
-                LaunchOrFocusUi();
+                InitializeCoreAndLaunch();
                 return 0;
             }
             catch (Exception ex)
@@ -39,6 +35,15 @@ namespace TerrariaModMenu.Core
                 ModLogger.Error("ModEntry.EntryPoint", ex);
                 return -1;
             }
+        }
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        private static void InitializeCoreAndLaunch()
+        {
+            CrashReporter.Install(_baseDirectory);
+            ModRuntime.LoadLaunchMode(_baseDirectory);
+            ModLogger.Info($"EntryPoint invoked (dir='{_baseDirectory}', mode={ModRuntime.CurrentMode}, x64={Environment.Is64BitProcess}).");
+            LaunchOrFocusUi();
         }
 
         private static void InstallAssemblyResolver()
@@ -54,16 +59,27 @@ namespace TerrariaModMenu.Core
                 {
                     try
                     {
-                        string simpleName = new AssemblyName(args.Name).Name;
-                        if (string.IsNullOrEmpty(simpleName) || string.IsNullOrEmpty(_baseDirectory))
+                        string? simpleName = new AssemblyName(args.Name).Name;
+                        if (string.IsNullOrEmpty(simpleName))
                         {
                             return null;
                         }
 
-                        string candidate = Path.Combine(_baseDirectory, simpleName + ".dll");
-                        if (File.Exists(candidate))
+                        foreach (Assembly loaded in AppDomain.CurrentDomain.GetAssemblies())
                         {
-                            return Assembly.LoadFrom(candidate);
+                            if (string.Equals(loaded.GetName().Name, simpleName, StringComparison.OrdinalIgnoreCase))
+                            {
+                                return loaded;
+                            }
+                        }
+
+                        if (!string.IsNullOrEmpty(_baseDirectory))
+                        {
+                            string candidate = Path.Combine(_baseDirectory, simpleName + ".dll");
+                            if (File.Exists(candidate))
+                            {
+                                return Assembly.LoadFrom(candidate);
+                            }
                         }
                     }
                     catch (Exception ex)

@@ -5,7 +5,7 @@
 <h1 align="center">TerraMMod (x86 .NET Runtime Research)</h1>
 
 <p align="center">
-  Internal runtime instrumentation, CLR hosting, and WinForms control panel for Terraria Vanilla (1.4.5.x, x86).<br />
+  Internal runtime instrumentation, CLR hosting, and WinForms control panel for Terraria Vanilla (1.4.6.x, x86).<br />
   Developed by <a href="https://github.com/RoyBruna">RoyBruna</a> under the GNU General Public License v3.0.
 </p>
 
