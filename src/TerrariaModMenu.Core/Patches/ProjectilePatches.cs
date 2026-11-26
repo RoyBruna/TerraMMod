@@ -133,6 +133,16 @@ namespace TerrariaModMenu.Core.Patches
                     return;
                 }
 
+                Projectile? orig = Main.projectile?[__result];
+                if (orig != null && orig.active && orig.bobber && orig.owner == Main.myPlayer)
+                {
+                    FishingPatches.HandleBobberSpawn(
+                        spawnSource, X, Y, SpeedX, SpeedY,
+                        Type, Damage, KnockBack, Owner,
+                        ai0, ai1, ai2, modifier);
+                    return;
+                }
+
                 ModConfig cfg = ModConfig.Instance;
                 if (!cfg.ProjectileMultishotEnabled &&
                     !cfg.ProjectileNoTileCollide &&
@@ -142,7 +152,6 @@ namespace TerrariaModMenu.Core.Patches
                     return;
                 }
 
-                Projectile? orig = Main.projectile?[__result];
                 if (!IsEligibleCombatProjectile(orig) || orig == null)
                 {
                     return;

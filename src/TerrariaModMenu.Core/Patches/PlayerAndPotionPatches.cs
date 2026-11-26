@@ -178,6 +178,16 @@ namespace TerrariaModMenu.Core.Patches
                     __instance.rangedCrit += cfg.BonusCritChance;
                     __instance.magicCrit += cfg.BonusCritChance;
                 }
+
+                if (cfg.FishingPowerBonus > 0) __instance.fishingSkill += cfg.FishingPowerBonus;
+                if (cfg.FishingNeverBreakLine) __instance.accFishingLine = true;
+                if (cfg.FishingLavaEnabled) __instance.accLavaFishing = true;
+                if (cfg.FishingInfiniteBait) __instance.accTackleBox = true;
+                if (cfg.FishingSonarAndCrate)
+                {
+                    __instance.sonarPotion = true;
+                    __instance.cratePotion = true;
+                }
             }
             catch (Exception ex)
             {

@@ -91,6 +91,25 @@ namespace TerrariaModMenu.Core.Core
         public volatile int SpawnRateMultiplier = 1;
         public volatile bool HotkeyTeleportCursor;
 
+        public volatile bool FishingMultiBobberEnabled;
+        public volatile int FishingBobberCount = 5;
+        public volatile int FishingCastSpreadPercent = 35;
+        public volatile bool FishingInstantBite;
+        public volatile bool FishingAutoReel;
+        public volatile bool FishingAutoRecast;
+        public volatile int FishingAutoReelFilter = 0;
+        public volatile bool FishingInfiniteBait;
+        public volatile bool FishingVirtualBait;
+        public volatile bool FishingNeverBreakLine;
+        public volatile bool FishingLavaEnabled;
+        public volatile bool FishingSonarAndCrate;
+        public volatile bool FishingIgnorePondSize;
+        public volatile int FishingPowerBonus = 0;
+        public volatile int FishingCrateChance = 0;
+        public volatile bool FishingGuaranteedCrate;
+        public volatile bool FishingBoostRare;
+        public volatile bool FishingAllowMultipleQuestFish;
+
         public bool TryGetRapidFireTicks(ItemCategory category, out int maxTicks)
         {
             switch (category)
@@ -181,6 +200,25 @@ namespace TerrariaModMenu.Core.Core
             CustomDayRate = 1;
             SpawnRateMultiplier = 1;
             HotkeyTeleportCursor = false;
+
+            FishingMultiBobberEnabled = false;
+            FishingBobberCount = 5;
+            FishingCastSpreadPercent = 35;
+            FishingInstantBite = false;
+            FishingAutoReel = false;
+            FishingAutoRecast = false;
+            FishingAutoReelFilter = 0;
+            FishingInfiniteBait = false;
+            FishingVirtualBait = false;
+            FishingNeverBreakLine = false;
+            FishingLavaEnabled = false;
+            FishingSonarAndCrate = false;
+            FishingIgnorePondSize = false;
+            FishingPowerBonus = 0;
+            FishingCrateChance = 0;
+            FishingGuaranteedCrate = false;
+            FishingBoostRare = false;
+            FishingAllowMultipleQuestFish = false;
         }
     }
 }

@@ -32,6 +32,7 @@ namespace TerrariaModMenu.Core.UI
 
         private readonly SurvivalTab _survivalTab;
         private readonly CombatTab _combatTab;
+        private readonly FishingTab _fishingTab;
         private readonly CraftingTab _craftingTab;
         private readonly PotionsTab _potionsTab;
         private readonly SpawnerWorldTab _spawnerTab;
@@ -229,6 +230,7 @@ namespace TerrariaModMenu.Core.UI
 
             _survivalTab = new SurvivalTab();
             _combatTab = new CombatTab();
+            _fishingTab = new FishingTab();
             _craftingTab = new CraftingTab();
             _potionsTab = new PotionsTab();
             _spawnerTab = new SpawnerWorldTab();
@@ -239,6 +241,7 @@ namespace TerrariaModMenu.Core.UI
             {
                 ApplySafeModeLock(_survivalTab);
                 ApplySafeModeLock(_combatTab);
+                ApplySafeModeLock(_fishingTab);
                 ApplySafeModeLock(_craftingTab);
                 ApplySafeModeLock(_potionsTab);
                 ApplySafeModeLock(_spawnerTab);
@@ -269,6 +272,11 @@ namespace TerrariaModMenu.Core.UI
                 "spawner", "World", "Spawner & World",
                 "Item spawner, fullbright, vision toggles, time and spawn rate",
                 DarkTheme.AccentBlue, _spawnerTab, () => _spawnerTab.EnsureCatalogLoaded(), safeMode));
+
+            RegisterSection(new SidebarSection(
+                "fishing", "Tools", "Fishing",
+                "Multi-bobber, instant bite, auto-reel/recast, loot boosters and angler quests",
+                DarkTheme.AccentCyan, _fishingTab, () => _fishingTab.RefreshTelemetry(), safeMode));
 
             RegisterSection(new SidebarSection(
                 "crafting", "Tools", "Crafting",
@@ -354,6 +362,7 @@ namespace TerrariaModMenu.Core.UI
             ModConfig.Instance.ResetAll();
             _survivalTab.SyncFromConfig();
             _combatTab.SyncFromConfig();
+            _fishingTab.SyncFromConfig();
             _craftingTab.SyncFromConfig();
             _potionsTab.SyncFromConfig();
             _spawnerTab.SyncFromConfig();
@@ -410,6 +419,11 @@ namespace TerrariaModMenu.Core.UI
                     _lblStateBadge.ForeColor = DarkTheme.AccentAmber;
                     _lblPlayerInfo.Text = "Waiting for world load...";
                     _lblHeldInfo.Text = "Held: - | [INSERT] Hide/Show";
+                }
+
+                if (_fishingTab.Visible)
+                {
+                    _fishingTab.RefreshTelemetry();
                 }
             }
             catch (Exception ex)

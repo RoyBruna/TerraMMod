@@ -30,6 +30,7 @@ namespace TerrariaModMenu.Core.Patches
             CraftingPatches.Install(_harmony);
             CombatPatches.Install(_harmony);
             ProjectilePatches.Install(_harmony);
+            FishingPatches.Install(_harmony);
             PlayerAndPotionPatches.Install(_harmony);
             WorldAndVisualPatches.Install(_harmony);
 

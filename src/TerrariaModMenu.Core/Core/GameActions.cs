@@ -474,5 +474,130 @@ namespace TerrariaModMenu.Core.Core
                 player.HealEffect(player.statLifeMax2, true);
             });
         }
+
+        public static void EnqueueRerollAnglerQuest()
+        {
+            GameDispatcher.Enqueue(() =>
+            {
+                if (!GameState.TryGetLocalPlayer(out _))
+                {
+                    return;
+                }
+
+                Main.AnglerQuestSwap();
+                int id = (Main.anglerQuestItemNetIDs != null && Main.anglerQuest >= 0 && Main.anglerQuest < Main.anglerQuestItemNetIDs.Length)
+                    ? Main.anglerQuestItemNetIDs[Main.anglerQuest]
+                    : 0;
+                string name = id > 0 ? Lang.GetItemNameValue(id) : "Unknown";
+                Main.NewText($"[ModMenu] New Angler Quest: {name}", 56, 189, 248);
+            });
+        }
+
+        public static void EnqueueResetAnglerDaily()
+        {
+            GameDispatcher.Enqueue(() =>
+            {
+                if (!GameState.TryGetLocalPlayer(out _))
+                {
+                    return;
+                }
+
+                Main.anglerQuestFinished = false;
+                Main.anglerWhoFinishedToday?.Clear();
+                Main.NewText("[ModMenu] Angler daily quest limit reset", 34, 197, 94);
+            });
+        }
+
+        public static void EnqueueSpawnCurrentQuestFish()
+        {
+            GameDispatcher.Enqueue(() =>
+            {
+                if (!GameState.TryGetLocalPlayer(out Player? player) || player == null || Main.anglerQuestItemNetIDs == null)
+                {
+                    return;
+                }
+
+                if (Main.anglerQuest < 0 || Main.anglerQuest >= Main.anglerQuestItemNetIDs.Length)
+                {
+                    return;
+                }
+
+                int fishId = Main.anglerQuestItemNetIDs[Main.anglerQuest];
+                var item = new Item();
+                item.SetDefaults(fishId);
+                if (!item.IsAir)
+                {
+                    item.stack = 1;
+                    player.QuickSpawnItem(player.GetItemSource_InventoryOverflow(), item);
+                    Main.NewText($"[ModMenu] Spawned Quest Fish: {item.Name}", 250, 204, 21);
+                }
+            });
+        }
+
+        public static void EnqueueApplyFishingBuffs()
+        {
+            GameDispatcher.Enqueue(() =>
+            {
+                if (!GameState.TryGetLocalPlayer(out Player? player) || player == null)
+                {
+                    return;
+                }
+
+                int ticks = 30 * 60 * 60;
+                player.AddBuff(BuffID.Fishing, ticks, false);
+                player.AddBuff(BuffID.Sonar, ticks, false);
+                player.AddBuff(BuffID.Crate, ticks, false);
+                player.AddBuff(BuffID.Lucky, ticks, false);
+                Main.NewText("[ModMenu] Fishing buffs applied (30m)", 139, 92, 246);
+            });
+        }
+
+        public static void EnqueueGiveMasterFishingKit()
+        {
+            GameDispatcher.Enqueue(() =>
+            {
+                if (!GameState.TryGetLocalPlayer(out Player? player) || player == null)
+                {
+                    return;
+                }
+
+                GiveKitItem(player, ItemID.GoldenFishingRod, 1);
+                GiveKitItem(player, ItemID.MasterBait, 99);
+                GiveKitItem(player, ItemID.LavaproofTackleBag, 1);
+                Main.NewText("[ModMenu] Master Fishing Kit added", 34, 197, 94);
+            });
+        }
+
+        public static void EnqueueGiveAnglerArmorSet()
+        {
+            GameDispatcher.Enqueue(() =>
+            {
+                if (!GameState.TryGetLocalPlayer(out Player? player) || player == null)
+                {
+                    return;
+                }
+
+                GiveKitItem(player, ItemID.AnglerHat, 1);
+                GiveKitItem(player, ItemID.AnglerVest, 1);
+                GiveKitItem(player, ItemID.AnglerPants, 1);
+                Main.NewText("[ModMenu] Angler Armor Set added", 96, 165, 250);
+            });
+        }
+
+        public static void EnqueueReelAllBobbers()
+        {
+            GameDispatcher.Enqueue(TerrariaModMenu.Core.Patches.FishingPatches.ReelAllActiveBobbersNow);
+        }
+
+        private static void GiveKitItem(Player player, int itemId, int stack)
+        {
+            var item = new Item();
+            item.SetDefaults(itemId);
+            if (!item.IsAir)
+            {
+                item.stack = Math.Max(1, Math.Min(stack, Math.Max(1, item.maxStack)));
+                player.QuickSpawnItem(player.GetItemSource_InventoryOverflow(), item);
+            }
+        }
     }
 }
