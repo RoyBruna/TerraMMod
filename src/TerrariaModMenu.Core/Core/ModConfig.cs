@@ -110,6 +110,15 @@ namespace TerrariaModMenu.Core.Core
         public volatile bool FishingBoostRare;
         public volatile bool FishingAllowMultipleQuestFish;
 
+        public volatile int BonusMaxMinions = 0;
+        public volatile int BonusMaxSentries = 0;
+        public volatile float SummonDamageMultiplier = 1.0f;
+        public volatile float BonusMinionKnockback = 0.0f;
+        public volatile float WhipRangeMultiplier = 1.0f;
+        public volatile float WhipSpeedMultiplier = 1.0f;
+        public volatile int BonusMaxWhipTags = 0;
+        public volatile float BonusWhipTagDuration = 0.0f;
+
         public bool TryGetRapidFireTicks(ItemCategory category, out int maxTicks)
         {
             switch (category)
@@ -136,6 +145,40 @@ namespace TerrariaModMenu.Core.Core
                     maxTicks = 0;
                     return false;
             }
+        }
+
+        public void ResetFishingOnly()
+        {
+            FishingMultiBobberEnabled = false;
+            FishingBobberCount = 5;
+            FishingCastSpreadPercent = 35;
+            FishingInstantBite = false;
+            FishingAutoReel = false;
+            FishingAutoRecast = false;
+            FishingAutoReelFilter = 0;
+            FishingInfiniteBait = false;
+            FishingVirtualBait = false;
+            FishingNeverBreakLine = false;
+            FishingLavaEnabled = false;
+            FishingSonarAndCrate = false;
+            FishingIgnorePondSize = false;
+            FishingPowerBonus = 0;
+            FishingCrateChance = 0;
+            FishingGuaranteedCrate = false;
+            FishingBoostRare = false;
+            FishingAllowMultipleQuestFish = false;
+        }
+
+        public void ResetSummonerOnly()
+        {
+            BonusMaxMinions = 0;
+            BonusMaxSentries = 0;
+            SummonDamageMultiplier = 1.0f;
+            BonusMinionKnockback = 0.0f;
+            WhipRangeMultiplier = 1.0f;
+            WhipSpeedMultiplier = 1.0f;
+            BonusMaxWhipTags = 0;
+            BonusWhipTagDuration = 0.0f;
         }
 
         public void ResetAll()
@@ -190,6 +233,13 @@ namespace TerrariaModMenu.Core.Core
             SuperHealAndManaPotions = false;
             OpPotionsEnabled = false;
             OpPotionMultiplier = 5.0f;
+            OpIronskin = true;
+            OpEndurance = true;
+            OpSwiftness = true;
+            OpDamagePotions = true;
+            OpRegeneration = true;
+            OpLifeforce = true;
+            OpMiningBuilder = true;
 
             Fullbright = false;
             VisionSpelunker = false;
@@ -201,24 +251,8 @@ namespace TerrariaModMenu.Core.Core
             SpawnRateMultiplier = 1;
             HotkeyTeleportCursor = false;
 
-            FishingMultiBobberEnabled = false;
-            FishingBobberCount = 5;
-            FishingCastSpreadPercent = 35;
-            FishingInstantBite = false;
-            FishingAutoReel = false;
-            FishingAutoRecast = false;
-            FishingAutoReelFilter = 0;
-            FishingInfiniteBait = false;
-            FishingVirtualBait = false;
-            FishingNeverBreakLine = false;
-            FishingLavaEnabled = false;
-            FishingSonarAndCrate = false;
-            FishingIgnorePondSize = false;
-            FishingPowerBonus = 0;
-            FishingCrateChance = 0;
-            FishingGuaranteedCrate = false;
-            FishingBoostRare = false;
-            FishingAllowMultipleQuestFish = false;
+            ResetFishingOnly();
+            ResetSummonerOnly();
         }
     }
 }

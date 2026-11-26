@@ -9,6 +9,8 @@ namespace TerrariaModMenu.Core.Patches
 {
     internal static class PlayerAndPotionPatches
     {
+        private static bool _reachModified;
+
         public static void Install(Harmony harmony)
         {
             HarmonyManager.SafePatch(
@@ -154,6 +156,13 @@ namespace TerrariaModMenu.Core.Patches
                     Player.tileRangeX = Player.DefaultTileRangeX + cfg.ReachBonusTiles;
                     Player.tileRangeY = Player.DefaultTileRangeY + cfg.ReachBonusTiles;
                     __instance.blockRange += cfg.ReachBonusTiles;
+                    _reachModified = true;
+                }
+                else if (_reachModified)
+                {
+                    Player.tileRangeX = Player.DefaultTileRangeX;
+                    Player.tileRangeY = Player.DefaultTileRangeY;
+                    _reachModified = false;
                 }
 
                 if (cfg.MiningSpeedMultiplier > 1.01f)
@@ -188,6 +197,18 @@ namespace TerrariaModMenu.Core.Patches
                     __instance.sonarPotion = true;
                     __instance.cratePotion = true;
                 }
+
+                if (cfg.BonusMaxMinions > 0) __instance.maxMinions += cfg.BonusMaxMinions;
+                if (cfg.BonusMaxSentries > 0) __instance.maxTurrets += cfg.BonusMaxSentries;
+                if (cfg.SummonDamageMultiplier > 1.01f) __instance.minionDamage *= cfg.SummonDamageMultiplier;
+                if (cfg.BonusMinionKnockback > 0.01f) __instance.minionKB += cfg.BonusMinionKnockback;
+                if (cfg.WhipRangeMultiplier > 1.01f) __instance.whipRangeMultiplier *= cfg.WhipRangeMultiplier;
+                if (cfg.WhipSpeedMultiplier > 1.01f)
+                {
+                    __instance.whipUseTimeMultiplier = Math.Max(0.1f, __instance.whipUseTimeMultiplier / cfg.WhipSpeedMultiplier);
+                }
+                if (cfg.BonusMaxWhipTags > 0) __instance.maxTagEffects += cfg.BonusMaxWhipTags;
+                if (cfg.BonusWhipTagDuration > 0.01f) __instance.tagEffectDuration += cfg.BonusWhipTagDuration;
             }
             catch (Exception ex)
             {

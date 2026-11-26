@@ -32,6 +32,7 @@ namespace TerrariaModMenu.Core.UI
 
         private readonly SurvivalTab _survivalTab;
         private readonly CombatTab _combatTab;
+        private readonly SummonerTab _summonerTab;
         private readonly FishingTab _fishingTab;
         private readonly CraftingTab _craftingTab;
         private readonly PotionsTab _potionsTab;
@@ -230,17 +231,19 @@ namespace TerrariaModMenu.Core.UI
 
             _survivalTab = new SurvivalTab();
             _combatTab = new CombatTab();
+            _summonerTab = new SummonerTab();
             _fishingTab = new FishingTab();
             _craftingTab = new CraftingTab();
             _potionsTab = new PotionsTab();
             _spawnerTab = new SpawnerWorldTab();
             _mapTab = new MapTab();
-            _settingsTab = new SettingsTab(this, ResetAllDefaults, Close);
+            _settingsTab = new SettingsTab(this, ResetAllDefaults, ReloadHooksLive, ToggleHooksAttached, Close);
 
             if (safeMode)
             {
                 ApplySafeModeLock(_survivalTab);
                 ApplySafeModeLock(_combatTab);
+                ApplySafeModeLock(_summonerTab);
                 ApplySafeModeLock(_fishingTab);
                 ApplySafeModeLock(_craftingTab);
                 ApplySafeModeLock(_potionsTab);
@@ -262,6 +265,11 @@ namespace TerrariaModMenu.Core.UI
                 "combat", "Combat", "Combat & Proj.",
                 "Rapid fire, infinite ammo, weapon editor and projectile madness",
                 DarkTheme.AccentRed, _combatTab, null, safeMode));
+
+            RegisterSection(new SidebarSection(
+                "summoner", "Combat", "Minions & Whips",
+                "Minion army cap, sentry/turret slots, whip range, speed and tag stacking",
+                DarkTheme.AccentPurple, _summonerTab, () => _summonerTab.RefreshTelemetry(), safeMode));
 
             RegisterSection(new SidebarSection(
                 "map", "World", "Interactive Map",
@@ -357,18 +365,76 @@ namespace TerrariaModMenu.Core.UI
             banner.BringToFront();
         }
 
-        private void ResetAllDefaults()
+        private void SyncAllTabsFromConfig()
         {
-            ModConfig.Instance.ResetAll();
             _survivalTab.SyncFromConfig();
             _combatTab.SyncFromConfig();
+            _summonerTab.SyncFromConfig();
             _fishingTab.SyncFromConfig();
             _craftingTab.SyncFromConfig();
             _potionsTab.SyncFromConfig();
             _spawnerTab.SyncFromConfig();
+        }
+
+        private void ResetAllDefaults()
+        {
+            ModConfig.Instance.ResetAll();
+            SyncAllTabsFromConfig();
             if (ModRuntime.IsFullModeActive)
             {
-                GameActions.EnqueueRefreshRecipes();
+                GameActions.EnqueueRestoreVanillaState();
+            }
+            _settingsTab.RefreshDiagnostics();
+        }
+
+        private void ReloadHooksLive()
+        {
+            ModConfig.Instance.ResetAll();
+            SyncAllTabsFromConfig();
+            ModRuntime.RequestReloadHooks(() =>
+            {
+                if (!IsDisposed && IsHandleCreated)
+                {
+                    try
+                    {
+                        BeginInvoke(new Action(() => _settingsTab.RefreshDiagnostics()));
+                    }
+                    catch { }
+                }
+            });
+        }
+
+        private void ToggleHooksAttached()
+        {
+            if (ModRuntime.HooksDetached)
+            {
+                ModRuntime.RequestAttachHooks(() =>
+                {
+                    if (!IsDisposed && IsHandleCreated)
+                    {
+                        try
+                        {
+                            BeginInvoke(new Action(() => _settingsTab.RefreshDiagnostics()));
+                        }
+                        catch { }
+                    }
+                });
+            }
+            else
+            {
+                ModConfig.Instance.ResetAll();
+                SyncAllTabsFromConfig();
+                ModRuntime.RequestDetachHooks(() =>
+                {
+                    if (!IsDisposed && IsHandleCreated)
+                    {
+                        try
+                        {
+                            BeginInvoke(new Action(() => _settingsTab.RefreshDiagnostics()));
+                        }
+                        catch { }
+                    }
+                });
             }
         }
 
@@ -385,7 +451,16 @@ namespace TerrariaModMenu.Core.UI
 
                 if (ModRuntime.CurrentMode == LaunchMode.Full)
                 {
-                    _lblHooksBadge.Text = $"HOOKS: {HarmonyManager.Installed.Count} OK";
+                    if (ModRuntime.HooksDetached)
+                    {
+                        _lblHooksBadge.Text = "VANILLA: 0 HOOKS";
+                        _lblHooksBadge.ForeColor = DarkTheme.AccentAmber;
+                    }
+                    else
+                    {
+                        _lblHooksBadge.Text = $"HOOKS: {HarmonyManager.Installed.Count} OK";
+                        _lblHooksBadge.ForeColor = HarmonyManager.Failed.Count == 0 ? DarkTheme.AccentCyan : DarkTheme.AccentAmber;
+                    }
                 }
 
                 GameSnapshot snap = GameState.CaptureSnapshot();
@@ -424,6 +499,10 @@ namespace TerrariaModMenu.Core.UI
                 if (_fishingTab.Visible)
                 {
                     _fishingTab.RefreshTelemetry();
+                }
+                else if (_summonerTab.Visible)
+                {
+                    _summonerTab.RefreshTelemetry();
                 }
             }
             catch (Exception ex)

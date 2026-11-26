@@ -15,6 +15,14 @@ namespace TerrariaModMenu.Core.UI.Tabs
         private readonly CheckBox _chkInfPotions;
         private readonly CheckBox _chkSuperHeal;
         private readonly CheckBox _chkOpEnable;
+        private readonly TrackBar _barOpMult;
+        private readonly CheckBox _chkOpIronskin;
+        private readonly CheckBox _chkOpEndurance;
+        private readonly CheckBox _chkOpSwiftness;
+        private readonly CheckBox _chkOpDamage;
+        private readonly CheckBox _chkOpRegen;
+        private readonly CheckBox _chkOpLifeforce;
+        private readonly CheckBox _chkOpMining;
 
         private readonly TextBox _txtSearch;
         private readonly ListBox _lstBuffs;
@@ -45,17 +53,17 @@ namespace TerrariaModMenu.Core.UI.Tabs
             _chkOpEnable.Font = DarkTheme.FontBold;
             grpOp.Controls.Add(_chkOpEnable);
 
-            DarkTheme.CreateSliderRow(grpOp, "Power Multiplier", 12, 46, 250, 1, 20, (int)cfg.OpPotionMultiplier,
+            (_barOpMult, _) = DarkTheme.CreateSliderRow(grpOp, "Power Multiplier", 12, 46, 250, 1, 20, (int)cfg.OpPotionMultiplier,
                 v => $"{v}x", v => cfg.OpPotionMultiplier = v);
 
-            var c1 = DarkTheme.CreateCheck("Ironskin", 12, 92, cfg.OpIronskin, v => cfg.OpIronskin = v);
-            var c2 = DarkTheme.CreateCheck("Endurance", 96, 92, cfg.OpEndurance, v => cfg.OpEndurance = v);
-            var c3 = DarkTheme.CreateCheck("Swiftness", 188, 92, cfg.OpSwiftness, v => cfg.OpSwiftness = v);
-            var c4 = DarkTheme.CreateCheck("Wrath/Rage/Dmg", 12, 116, cfg.OpDamagePotions, v => cfg.OpDamagePotions = v);
-            var c5 = DarkTheme.CreateCheck("Regen", 150, 116, cfg.OpRegeneration, v => cfg.OpRegeneration = v);
-            var c6 = DarkTheme.CreateCheck("Lifeforce (+MaxHP)", 12, 140, cfg.OpLifeforce, v => cfg.OpLifeforce = v);
-            var c7 = DarkTheme.CreateCheck("Mining/Build", 150, 140, cfg.OpMiningBuilder, v => cfg.OpMiningBuilder = v);
-            grpOp.Controls.AddRange(new Control[] { c1, c2, c3, c4, c5, c6, c7 });
+            _chkOpIronskin = DarkTheme.CreateCheck("Ironskin", 12, 92, cfg.OpIronskin, v => cfg.OpIronskin = v);
+            _chkOpEndurance = DarkTheme.CreateCheck("Endurance", 96, 92, cfg.OpEndurance, v => cfg.OpEndurance = v);
+            _chkOpSwiftness = DarkTheme.CreateCheck("Swiftness", 188, 92, cfg.OpSwiftness, v => cfg.OpSwiftness = v);
+            _chkOpDamage = DarkTheme.CreateCheck("Wrath/Rage/Dmg", 12, 116, cfg.OpDamagePotions, v => cfg.OpDamagePotions = v);
+            _chkOpRegen = DarkTheme.CreateCheck("Regen", 150, 116, cfg.OpRegeneration, v => cfg.OpRegeneration = v);
+            _chkOpLifeforce = DarkTheme.CreateCheck("Lifeforce (+MaxHP)", 12, 140, cfg.OpLifeforce, v => cfg.OpLifeforce = v);
+            _chkOpMining = DarkTheme.CreateCheck("Mining/Build", 150, 140, cfg.OpMiningBuilder, v => cfg.OpMiningBuilder = v);
+            grpOp.Controls.AddRange(new Control[] { _chkOpIronskin, _chkOpEndurance, _chkOpSwiftness, _chkOpDamage, _chkOpRegen, _chkOpLifeforce, _chkOpMining });
             Controls.Add(grpOp);
 
             var grpPacks = DarkTheme.CreateGroup("Buff Packs", 8, 188, 538, 66);
@@ -141,6 +149,14 @@ namespace TerrariaModMenu.Core.UI.Tabs
             _chkInfPotions.Checked = cfg.InfinitePotions;
             _chkSuperHeal.Checked = cfg.SuperHealAndManaPotions;
             _chkOpEnable.Checked = cfg.OpPotionsEnabled;
+            _barOpMult.Value = Math.Max(_barOpMult.Minimum, Math.Min(_barOpMult.Maximum, (int)cfg.OpPotionMultiplier));
+            _chkOpIronskin.Checked = cfg.OpIronskin;
+            _chkOpEndurance.Checked = cfg.OpEndurance;
+            _chkOpSwiftness.Checked = cfg.OpSwiftness;
+            _chkOpDamage.Checked = cfg.OpDamagePotions;
+            _chkOpRegen.Checked = cfg.OpRegeneration;
+            _chkOpLifeforce.Checked = cfg.OpLifeforce;
+            _chkOpMining.Checked = cfg.OpMiningBuilder;
         }
     }
 }

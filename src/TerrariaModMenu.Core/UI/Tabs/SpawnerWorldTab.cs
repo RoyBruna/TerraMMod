@@ -22,6 +22,8 @@ namespace TerrariaModMenu.Core.UI.Tabs
         private readonly CheckBox _chkNightVis;
         private readonly CheckBox _chkFreezeTime;
         private readonly CheckBox _chkTpHotkey;
+        private readonly TrackBar _barDayRate;
+        private readonly TrackBar _barSpawnRate;
 
         public SpawnerWorldTab()
         {
@@ -104,10 +106,10 @@ namespace TerrariaModMenu.Core.UI.Tabs
             _chkFreezeTime = DarkTheme.CreateCheck("Freeze World Time", 12, 54, cfg.FreezeTime, v => cfg.FreezeTime = v);
             grpWorld.Controls.AddRange(new Control[] { btnDawn, btnNoon, btnDusk, btnMid, _chkFreezeTime });
 
-            DarkTheme.CreateSliderRow(grpWorld, "Time Speed (dayRate)", 12, 78, 256, 1, 60, cfg.CustomDayRate,
+            (_barDayRate, _) = DarkTheme.CreateSliderRow(grpWorld, "Time Speed (dayRate)", 12, 78, 256, 1, 60, cfg.CustomDayRate,
                 v => $"{v}x", v => cfg.CustomDayRate = v);
 
-            DarkTheme.CreateSliderRow(grpWorld, "Enemy Spawn Rate", 12, 124, 256, 0, 20, cfg.SpawnRateMultiplier,
+            (_barSpawnRate, _) = DarkTheme.CreateSliderRow(grpWorld, "Enemy Spawn Rate", 12, 124, 256, 0, 20, cfg.SpawnRateMultiplier,
                 v => v == 0 ? "0x (OFF)" : $"{v}x", v => cfg.SpawnRateMultiplier = v);
 
             var btnTpSpawn = DarkTheme.CreateButton("TP Spawn", 12, 172, 122, 24, DarkTheme.AccentCyan, GameActions.EnqueueTeleportToSpawn);
@@ -168,6 +170,8 @@ namespace TerrariaModMenu.Core.UI.Tabs
             _chkNightVis.Checked = cfg.VisionNightVision;
             _chkFreezeTime.Checked = cfg.FreezeTime;
             _chkTpHotkey.Checked = cfg.HotkeyTeleportCursor;
+            _barDayRate.Value = Math.Max(_barDayRate.Minimum, Math.Min(_barDayRate.Maximum, cfg.CustomDayRate));
+            _barSpawnRate.Value = Math.Max(_barSpawnRate.Minimum, Math.Min(_barSpawnRate.Maximum, cfg.SpawnRateMultiplier));
         }
     }
 }

@@ -56,6 +56,16 @@ namespace TerrariaModMenu.Core.Patches
         private static bool _sawActiveBobbers;
         private static int _recastDelayTicks;
 
+        public static void ResetState()
+        {
+            _spawningExtraBobbers = false;
+            _lastCastVelocity = Vector2.Zero;
+            _lastCastBobberType = 0;
+            _hasLastCast = false;
+            _sawActiveBobbers = false;
+            _recastDelayTicks = 0;
+        }
+
         private static readonly MethodInfo? ConsumeBaitMethod =
             AccessTools.Method(typeof(Player), "ItemCheck_CheckFishingBobber_ConsumeBait", new[] { typeof(Projectile), typeof(int).MakeByRefType() });
 

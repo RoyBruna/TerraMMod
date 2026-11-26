@@ -18,16 +18,21 @@ namespace TerrariaModMenu.Core.Core
         private static bool _tickAttached;
         private static volatile bool _installPending;
         private static volatile bool _uninstallPending;
+        private static volatile bool _detachOnlyPending;
+        private static volatile bool _reloadPending;
         private static volatile bool _hooksReady;
+        private static volatile bool _hooksDetachedByUser;
+        private static Action? _pendingHookCallback;
         private static uint _lastWorldTick;
-        private static bool _wasTimeFrozen;
+        private static bool _timeRateDirty;
         private static readonly ManualResetEventSlim UninstallDone = new ManualResetEventSlim(false);
 
         public static LaunchMode CurrentMode { get; private set; } = LaunchMode.Full;
         public static bool HooksReady => _hooksReady;
+        public static bool HooksDetached => _hooksDetachedByUser;
 
         public static bool IsFullModeActive =>
-            CurrentMode == LaunchMode.Full && Main.netMode == 0 && !Main.dedServ;
+            CurrentMode == LaunchMode.Full && !_hooksDetachedByUser && Main.netMode == 0 && !Main.dedServ;
 
         public static void LoadLaunchMode(string baseDirectory)
         {
@@ -62,8 +67,12 @@ namespace TerrariaModMenu.Core.Core
             lock (Sync)
             {
                 _hooksReady = CurrentMode == LaunchMode.Safe;
+                _hooksDetachedByUser = false;
                 _installPending = CurrentMode == LaunchMode.Full;
                 _uninstallPending = false;
+                _detachOnlyPending = false;
+                _reloadPending = false;
+                _pendingHookCallback = null;
                 UninstallDone.Reset();
 
                 if (!_tickAttached)
@@ -71,6 +80,60 @@ namespace TerrariaModMenu.Core.Core
                     Main.OnTickForThirdPartySoftwareOnly += OnGameTick;
                     _tickAttached = true;
                 }
+            }
+        }
+
+        public static void RequestReloadHooks(Action? onCompleted = null)
+        {
+            if (CurrentMode != LaunchMode.Full)
+            {
+                onCompleted?.Invoke();
+                return;
+            }
+
+            lock (Sync)
+            {
+                ModConfig.Instance.ResetAll();
+                _hooksDetachedByUser = false;
+                _detachOnlyPending = false;
+                _pendingHookCallback = onCompleted;
+                _reloadPending = true;
+            }
+        }
+
+        public static void RequestDetachHooks(Action? onCompleted = null)
+        {
+            if (CurrentMode != LaunchMode.Full)
+            {
+                onCompleted?.Invoke();
+                return;
+            }
+
+            lock (Sync)
+            {
+                ModConfig.Instance.ResetAll();
+                _reloadPending = false;
+                _installPending = false;
+                _pendingHookCallback = onCompleted;
+                _detachOnlyPending = true;
+            }
+        }
+
+        public static void RequestAttachHooks(Action? onCompleted = null)
+        {
+            if (CurrentMode != LaunchMode.Full)
+            {
+                onCompleted?.Invoke();
+                return;
+            }
+
+            lock (Sync)
+            {
+                _hooksDetachedByUser = false;
+                _detachOnlyPending = false;
+                _reloadPending = false;
+                _pendingHookCallback = onCompleted;
+                _installPending = true;
             }
         }
 
@@ -114,16 +177,52 @@ namespace TerrariaModMenu.Core.Core
                 if (_uninstallPending)
                 {
                     _uninstallPending = false;
+                    GameActions.RestoreVanillaStateImmediate(false);
                     HarmonyManager.UninstallAll();
+                    _timeRateDirty = false;
                     UninstallDone.Set();
+                    return;
+                }
+
+                if (_detachOnlyPending)
+                {
+                    _detachOnlyPending = false;
+                    Action? cb = TakePendingCallback();
+                    GameActions.RestoreVanillaStateImmediate(true);
+                    HarmonyManager.UninstallAll();
+                    _hooksDetachedByUser = true;
+                    _hooksReady = false;
+                    _timeRateDirty = false;
+                    cb?.Invoke();
+                    return;
+                }
+
+                if (_reloadPending)
+                {
+                    _reloadPending = false;
+                    Action? cb = TakePendingCallback();
+                    GameActions.RestoreVanillaStateImmediate(false);
+                    HarmonyManager.UninstallAll();
+                    HarmonyManager.InstallAll();
+                    _hooksDetachedByUser = false;
+                    _hooksReady = true;
+                    _timeRateDirty = false;
+                    if (!Main.gameMenu)
+                    {
+                        Main.NewText($"[ModMenu] Vanilla state restored & {HarmonyManager.Installed.Count} hooks reloaded", 56, 189, 248);
+                    }
+                    cb?.Invoke();
                     return;
                 }
 
                 if (_installPending)
                 {
                     _installPending = false;
+                    Action? cb = TakePendingCallback();
                     HarmonyManager.InstallAll();
+                    _hooksDetachedByUser = false;
                     _hooksReady = true;
+                    cb?.Invoke();
                 }
 
                 if (!IsFullModeActive)
@@ -144,12 +243,17 @@ namespace TerrariaModMenu.Core.Core
                     Main.dayTime = cfg.FrozenDayTime;
                     Main.time = cfg.FrozenTimeValue;
                     Main.dayRate = 0;
-                    _wasTimeFrozen = true;
+                    _timeRateDirty = true;
                 }
-                else if (_wasTimeFrozen || cfg.CustomDayRate != 1)
+                else if (cfg.CustomDayRate != 1)
                 {
                     Main.dayRate = cfg.CustomDayRate;
-                    _wasTimeFrozen = false;
+                    _timeRateDirty = true;
+                }
+                else if (_timeRateDirty)
+                {
+                    Main.dayRate = 1;
+                    _timeRateDirty = false;
                 }
 
                 uint currentTick = Main.GameUpdateCount;
@@ -163,6 +267,16 @@ namespace TerrariaModMenu.Core.Core
             catch (Exception ex)
             {
                 ModLogger.Error("ModRuntime.OnGameTick", ex);
+            }
+        }
+
+        private static Action? TakePendingCallback()
+        {
+            lock (Sync)
+            {
+                Action? cb = _pendingHookCallback;
+                _pendingHookCallback = null;
+                return cb;
             }
         }
     }

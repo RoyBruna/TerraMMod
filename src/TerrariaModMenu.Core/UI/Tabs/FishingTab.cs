@@ -128,13 +128,19 @@ namespace TerrariaModMenu.Core.UI.Tabs
             _chkInfBait = DarkTheme.CreateCheck("Infinite Bait (Never Consume)", 280, 98, cfg.FishingInfiniteBait, v => cfg.FishingInfiniteBait = v);
             _chkVirtualBait = DarkTheme.CreateCheck("Virtual Master Bait (Fish w/o Bait)", 280, 122, cfg.FishingVirtualBait, v => cfg.FishingVirtualBait = v);
 
-            var btnReelAll = DarkTheme.CreateButton("Reel All Active Bobbers", 280, 158, 244, 32, DarkTheme.AccentCyan, GameActions.EnqueueReelAllBobbers);
+            var btnReelAll = DarkTheme.CreateButton("Reel All Bobbers", 280, 158, 126, 32, DarkTheme.AccentCyan, GameActions.EnqueueReelAllBobbers);
             btnReelAll.ForeColor = Color.Black;
+            var btnResetFish = DarkTheme.CreateButton("Reset Fishing", 412, 158, 112, 32, DarkTheme.BgInput, () =>
+            {
+                ModConfig.Instance.ResetFishingOnly();
+                SyncFromConfig();
+                GameActions.EnqueueResetFishingState();
+            });
 
             grpAuto.Controls.AddRange(new Control[]
             {
                 _chkMultiBobber, _chkInstantBite, _chkAutoReel, _chkAutoRecast,
-                lblFilter, _cmbReelFilter, _chkNeverBreak, _chkInfBait, _chkVirtualBait, btnReelAll
+                lblFilter, _cmbReelFilter, _chkNeverBreak, _chkInfBait, _chkVirtualBait, btnReelAll, btnResetFish
             });
             Controls.Add(grpAuto);
 

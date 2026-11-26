@@ -21,8 +21,44 @@ namespace TerrariaModMenu.Core.Core
         public override string ToString() => $"[{Id}] {Name}";
     }
 
+    internal readonly struct SummonerTelemetry
+    {
+        public bool InWorld { get; }
+        public int ActiveMinions { get; }
+        public float UsedMinionSlots { get; }
+        public int MaxMinions { get; }
+        public int ActiveSentries { get; }
+        public int MaxSentries { get; }
+        public float MinionDamageMult { get; }
+        public float WhipRangeMult { get; }
+        public float WhipUseTimeMult { get; }
+
+        public SummonerTelemetry(
+            bool inWorld,
+            int activeMinions,
+            float usedMinionSlots,
+            int maxMinions,
+            int activeSentries,
+            int maxSentries,
+            float minionDamageMult,
+            float whipRangeMult,
+            float whipUseTimeMult)
+        {
+            InWorld = inWorld;
+            ActiveMinions = activeMinions;
+            UsedMinionSlots = usedMinionSlots;
+            MaxMinions = maxMinions;
+            ActiveSentries = activeSentries;
+            MaxSentries = maxSentries;
+            MinionDamageMult = minionDamageMult;
+            WhipRangeMult = whipRangeMult;
+            WhipUseTimeMult = whipUseTimeMult;
+        }
+    }
+
     internal static class GameActions
     {
+        private static readonly HashSet<int> ModifiedItemSlots = new HashSet<int>();
         private static readonly int[] CombatPackBuffs =
         {
             BuffID.Ironskin,
@@ -187,6 +223,7 @@ namespace TerrariaModMenu.Core.Core
                 held.knockBack = knockBack;
                 held.scale = Math.Max(0.1f, scale);
                 held.autoReuse = autoReuse;
+                ModifiedItemSlots.Add(player.selectedItem);
                 Main.NewText($"[ModMenu] Updated {held.Name}", 96, 165, 250);
             });
         }
@@ -215,6 +252,7 @@ namespace TerrariaModMenu.Core.Core
                 {
                     held.Prefix(prefix);
                 }
+                ModifiedItemSlots.Remove(player.selectedItem);
                 Main.NewText($"[ModMenu] Restored {held.Name}", 251, 191, 36);
             });
         }
@@ -587,6 +625,201 @@ namespace TerrariaModMenu.Core.Core
         public static void EnqueueReelAllBobbers()
         {
             GameDispatcher.Enqueue(TerrariaModMenu.Core.Patches.FishingPatches.ReelAllActiveBobbersNow);
+        }
+
+        public static void EnqueueResetFishingState()
+        {
+            GameDispatcher.Enqueue(() =>
+            {
+                TerrariaModMenu.Core.Patches.FishingPatches.ResetState();
+                if (GameState.TryGetLocalPlayer(out Player? player) && player != null)
+                {
+                    player.RemoveAllFishingBobbers();
+                    Main.NewText("[ModMenu] Fishing restored to vanilla defaults", 56, 189, 248);
+                }
+            });
+        }
+
+        public static void EnqueueRestoreVanillaState()
+        {
+            GameDispatcher.Enqueue(() => RestoreVanillaStateImmediate(true));
+        }
+
+        public static void RestoreVanillaStateImmediate(bool announce)
+        {
+            try
+            {
+                TerrariaModMenu.Core.Patches.FishingPatches.ResetState();
+                Main.dayRate = 1;
+                Player.tileRangeX = Player.DefaultTileRangeX;
+                Player.tileRangeY = Player.DefaultTileRangeY;
+                DebugOptions.unlockMap = 0;
+
+                if (GameState.TryGetLocalPlayer(out Player? player) && player != null)
+                {
+                    player.creativeGodMode = false;
+                    player.immune = false;
+                    player.immuneNoBlink = false;
+                    player.immuneTime = 0;
+                    player.RemoveAllFishingBobbers();
+
+                    if (ModifiedItemSlots.Count > 0 && player.inventory != null)
+                    {
+                        foreach (int slot in ModifiedItemSlots)
+                        {
+                            if (slot >= 0 && slot < player.inventory.Length)
+                            {
+                                Item it = player.inventory[slot];
+                                if (it != null && !it.IsAir && it.type > 0)
+                                {
+                                    int t = it.type;
+                                    int s = it.stack;
+                                    byte p = it.prefix;
+                                    it.SetDefaults(t);
+                                    it.stack = s;
+                                    if (p > 0)
+                                    {
+                                        it.Prefix(p);
+                                    }
+                                }
+                            }
+                        }
+                        ModifiedItemSlots.Clear();
+                    }
+
+                    player.UpdateMaxTurrets();
+                    Recipe.UpdateRecipeList();
+
+                    if (announce)
+                    {
+                        Main.NewText("[ModMenu] All modifications cleared - vanilla state restored", 34, 197, 94);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                ModLogger.Error("GameActions.RestoreVanillaStateImmediate", ex);
+            }
+        }
+
+        public static void EnqueueDespawnAllMinions()
+        {
+            GameDispatcher.Enqueue(() =>
+            {
+                if (!GameState.TryGetLocalPlayer(out Player? player) || player == null || Main.projectile == null)
+                {
+                    return;
+                }
+
+                int killed = 0;
+                int limit = Math.Min(Main.maxProjectiles, Main.projectile.Length);
+                for (int i = 0; i < limit; i++)
+                {
+                    Projectile? p = Main.projectile[i];
+                    if (p != null && p.active && p.owner == Main.myPlayer && p.minion)
+                    {
+                        p.Kill();
+                        killed++;
+                    }
+                }
+                Main.NewText($"[ModMenu] Despawned {killed} minion(s)", 139, 92, 246);
+            });
+        }
+
+        public static void EnqueueDespawnAllSentries()
+        {
+            GameDispatcher.Enqueue(() =>
+            {
+                if (!GameState.TryGetLocalPlayer(out Player? player) || player == null || Main.projectile == null)
+                {
+                    return;
+                }
+
+                int killed = 0;
+                int limit = Math.Min(Main.maxProjectiles, Main.projectile.Length);
+                for (int i = 0; i < limit; i++)
+                {
+                    Projectile? p = Main.projectile[i];
+                    if (p != null && p.active && p.owner == Main.myPlayer && p.sentry)
+                    {
+                        p.Kill();
+                        killed++;
+                    }
+                }
+                Main.NewText($"[ModMenu] Despawned {killed} sentry/turret(s)", 96, 165, 250);
+            });
+        }
+
+        public static void EnqueueApplySummonerBuffs()
+        {
+            GameDispatcher.Enqueue(() =>
+            {
+                if (!GameState.TryGetLocalPlayer(out Player? player) || player == null)
+                {
+                    return;
+                }
+
+                int ticks = 30 * 60 * 60;
+                player.AddBuff(BuffID.Summoning, ticks, false);
+                player.AddBuff(BuffID.Bewitched, ticks, false);
+                player.AddBuff(BuffID.WarTable, ticks, false);
+                player.AddBuff(BuffID.WellFed3, ticks, false);
+                Main.NewText("[ModMenu] Summoner buff pack applied (30m)", 139, 92, 246);
+            });
+        }
+
+        public static SummonerTelemetry CaptureSummonerTelemetry()
+        {
+            try
+            {
+                if (!GameState.TryGetLocalPlayer(out Player? player) || player == null)
+                {
+                    return default;
+                }
+
+                int minions = 0;
+                float usedSlots = 0f;
+                int sentries = 0;
+                Projectile[]? arr = Main.projectile;
+                if (arr != null)
+                {
+                    int limit = Math.Min(Main.maxProjectiles, arr.Length);
+                    for (int i = 0; i < limit; i++)
+                    {
+                        Projectile? p = arr[i];
+                        if (p == null || !p.active || p.owner != Main.myPlayer)
+                        {
+                            continue;
+                        }
+
+                        if (p.minion)
+                        {
+                            minions++;
+                            usedSlots += p.minionSlots;
+                        }
+                        else if (p.sentry)
+                        {
+                            sentries++;
+                        }
+                    }
+                }
+
+                return new SummonerTelemetry(
+                    true,
+                    minions,
+                    usedSlots,
+                    player.maxMinions,
+                    sentries,
+                    player.maxTurrets,
+                    player.minionDamage,
+                    player.whipRangeMultiplier,
+                    player.whipUseTimeMultiplier);
+            }
+            catch (Exception ex)
+            {
+                ModLogger.Error("GameActions.CaptureSummonerTelemetry", ex);
+                return default;
+            }
         }
 
         private static void GiveKitItem(Player player, int itemId, int stack)
