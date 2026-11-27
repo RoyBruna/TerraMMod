@@ -262,6 +262,7 @@ namespace TerrariaModMenu.Core.Core
                     _lastWorldTick = currentTick;
                     ProjectilePatches.TickActiveProjectiles();
                     FishingPatches.TickFishing();
+                    EntityChaosEngine.TickChaos();
                 }
             }
             catch (Exception ex)

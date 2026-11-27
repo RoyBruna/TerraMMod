@@ -68,7 +68,7 @@ namespace TerrariaModMenu.Core.UI
                 ControlStyles.OptimizedDoubleBuffer |
                 ControlStyles.Selectable,
                 true);
-            Height = 32;
+            Height = 28;
             Cursor = Cursors.Hand;
             TabStop = false;
         }
@@ -164,7 +164,7 @@ namespace TerrariaModMenu.Core.UI
             var footer = new Panel
             {
                 Dock = DockStyle.Bottom,
-                Height = 46,
+                Height = 56,
                 BackColor = Color.FromArgb(11, 13, 18),
                 Padding = new Padding(10, 6, 8, 6)
             };
@@ -176,7 +176,7 @@ namespace TerrariaModMenu.Core.UI
 
             var lblHotkeys = new Label
             {
-                Text = "[INS] Show / Hide\n[F3]  Cursor Teleport",
+                Text = "[INS] Show / Hide\n[F3]  Cursor Teleport\n[F4]  Spawn NPC",
                 Dock = DockStyle.Fill,
                 ForeColor = DarkTheme.TextMuted,
                 Font = DarkTheme.FontTiny,
@@ -190,9 +190,22 @@ namespace TerrariaModMenu.Core.UI
                 BackColor = DarkTheme.BgSidebar,
                 AutoScroll = true
             };
+            _scrollHost.HorizontalScroll.Maximum = 0;
+            _scrollHost.HorizontalScroll.Enabled = false;
+            _scrollHost.HorizontalScroll.Visible = false;
+            _scrollHost.SizeChanged += (_, _) => SyncItemWidths();
 
             Controls.Add(_scrollHost);
             Controls.Add(footer);
+        }
+
+        private void SyncItemWidths()
+        {
+            int w = Math.Max(120, _scrollHost.ClientSize.Width);
+            foreach (SidebarNavItem item in _items)
+            {
+                item.Width = w;
+            }
         }
 
         protected override void OnPaint(PaintEventArgs e)
@@ -208,14 +221,14 @@ namespace TerrariaModMenu.Core.UI
             {
                 if (_items.Count > 0)
                 {
-                    _nextY += 8;
+                    _nextY += 5;
                 }
 
                 var lblCat = new Label
                 {
                     Text = section.Category.ToUpperInvariant(),
                     Location = new Point(10, _nextY),
-                    Size = new Size(Width - 22, 18),
+                    Size = new Size(Width - 28, 16),
                     ForeColor = DarkTheme.TextMuted,
                     BackColor = Color.Transparent,
                     Font = DarkTheme.FontCategory,
@@ -223,15 +236,14 @@ namespace TerrariaModMenu.Core.UI
                     TextAlign = ContentAlignment.MiddleLeft
                 };
                 _scrollHost.Controls.Add(lblCat);
-                _nextY += 20;
+                _nextY += 17;
                 _lastCategory = section.Category;
             }
 
             var item = new SidebarNavItem(section)
             {
                 Location = new Point(0, _nextY),
-                Width = Width - 1,
-                Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right
+                Width = Width - 18
             };
             item.Click += (_, _) => SelectSection(section.Key);
 
@@ -239,6 +251,7 @@ namespace TerrariaModMenu.Core.UI
             _items.Add(item);
             _byKey[section.Key] = item;
             _nextY += item.Height + 1;
+            SyncItemWidths();
         }
 
         public void SelectSection(string key)

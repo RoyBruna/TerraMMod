@@ -109,7 +109,7 @@ namespace TerrariaModMenu.Core.UI.Tabs
             (_barDayRate, _) = DarkTheme.CreateSliderRow(grpWorld, "Time Speed (dayRate)", 12, 78, 256, 1, 60, cfg.CustomDayRate,
                 v => $"{v}x", v => cfg.CustomDayRate = v);
 
-            (_barSpawnRate, _) = DarkTheme.CreateSliderRow(grpWorld, "Enemy Spawn Rate", 12, 124, 256, 0, 20, cfg.SpawnRateMultiplier,
+            (_barSpawnRate, _) = DarkTheme.CreateSliderRow(grpWorld, "Enemy Spawn Rate", 12, 124, 256, 0, 100, cfg.SpawnRateMultiplier,
                 v => v == 0 ? "0x (OFF)" : $"{v}x", v => cfg.SpawnRateMultiplier = v);
 
             var btnTpSpawn = DarkTheme.CreateButton("TP Spawn", 12, 172, 122, 24, DarkTheme.AccentCyan, GameActions.EnqueueTeleportToSpawn);

@@ -2,11 +2,46 @@ using System;
 using System.Collections.Generic;
 using Microsoft.Xna.Framework;
 using Terraria;
+using Terraria.DataStructures;
 using Terraria.ID;
 using Terraria.Testing;
 
 namespace TerrariaModMenu.Core.Core
 {
+    internal enum NpcCatalogCategory
+    {
+        Hostile = 0,
+        Boss = 1,
+        Town = 2,
+        Critter = 3
+    }
+
+    internal readonly struct NpcCatalogEntry
+    {
+        public int Id { get; }
+        public string Name { get; }
+        public NpcCatalogCategory Category { get; }
+
+        public NpcCatalogEntry(int id, string name, NpcCatalogCategory category)
+        {
+            Id = id;
+            Name = name;
+            Category = category;
+        }
+
+        public override string ToString()
+        {
+            string tag = Category switch
+            {
+                NpcCatalogCategory.Boss => "BOSS",
+                NpcCatalogCategory.Town => "TOWN",
+                NpcCatalogCategory.Critter => "CRIT",
+                _ => "MOB "
+            };
+            return $"[{tag}] [{Id}] {Name}";
+        }
+    }
+
     internal readonly struct CatalogEntry
     {
         public int Id { get; }
@@ -820,6 +855,208 @@ namespace TerrariaModMenu.Core.Core
                 ModLogger.Error("GameActions.CaptureSummonerTelemetry", ex);
                 return default;
             }
+        }
+
+        public static List<NpcCatalogEntry> BuildNpcCatalog()
+        {
+            var list = new List<NpcCatalogEntry>(700);
+            try
+            {
+                int count = NPCID.Count;
+                var probe = new NPC();
+                for (int id = 1; id < count; id++)
+                {
+                    string name = Lang.GetNPCNameValue(id);
+                    if (string.IsNullOrWhiteSpace(name))
+                    {
+                        continue;
+                    }
+
+                    NpcCatalogCategory cat = NpcCatalogCategory.Hostile;
+                    try
+                    {
+                        probe.SetDefaults(id);
+                        bool isCritter = id < NPCID.Sets.CountsAsCritter.Length && NPCID.Sets.CountsAsCritter[id];
+                        bool isBossSet = id < NPCID.Sets.ShouldBeCountedAsBossForBestiary.Length && NPCID.Sets.ShouldBeCountedAsBossForBestiary[id];
+                        if (probe.boss || isBossSet || id == NPCID.EaterofWorldsHead || id == NPCID.MoonLordCore)
+                        {
+                            cat = NpcCatalogCategory.Boss;
+                        }
+                        else if (probe.townNPC)
+                        {
+                            cat = NpcCatalogCategory.Town;
+                        }
+                        else if (isCritter || (probe.friendly && !probe.townNPC))
+                        {
+                            cat = NpcCatalogCategory.Critter;
+                        }
+                    }
+                    catch
+                    {
+                    }
+
+                    list.Add(new NpcCatalogEntry(id, name, cat));
+                }
+            }
+            catch (Exception ex)
+            {
+                ModLogger.Error("GameActions.BuildNpcCatalog", ex);
+            }
+            return list;
+        }
+
+        public static void EnqueueSpawnNpc(int npcType, int count, int locationMode)
+        {
+            GameDispatcher.Enqueue(() =>
+            {
+                if (!GameState.TryGetLocalPlayer(out Player? player) || player == null)
+                {
+                    return;
+                }
+
+                int clampedCount = Math.Max(1, Math.Min(100, count));
+
+                if (npcType == -999)
+                {
+                    for (int k = 0; k < Math.Min(clampedCount, 10); k++)
+                    {
+                        SpawnSingleNpc(player, NPCID.Retinazer, locationMode, k, 2);
+                        SpawnSingleNpc(player, NPCID.Spazmatism, locationMode, k + 1, 2);
+                    }
+                    Main.NewText("[ModMenu] Spawned The Twins", 248, 113, 113);
+                    return;
+                }
+
+                if (npcType == NPCID.WallofFlesh)
+                {
+                    NPC.SpawnWOF(locationMode == 1 ? Main.MouseWorld : player.position);
+                    Main.NewText("[ModMenu] Spawned Wall of Flesh", 248, 113, 113);
+                    return;
+                }
+
+                int spawned = 0;
+                for (int k = 0; k < clampedCount; k++)
+                {
+                    if (SpawnSingleNpc(player, npcType, locationMode, k, clampedCount))
+                    {
+                        spawned++;
+                    }
+                }
+
+                string npcName = Lang.GetNPCNameValue(npcType);
+                if (string.IsNullOrWhiteSpace(npcName))
+                {
+                    npcName = $"NPC #{npcType}";
+                }
+
+                if (spawned > 0)
+                {
+                    Main.NewText($"[ModMenu] Spawned {spawned}x {npcName}", 250, 204, 21);
+                }
+            });
+        }
+
+        private static bool SpawnSingleNpc(Player player, int npcType, int locationMode, int index, int total)
+        {
+            if (locationMode == 2 && npcType != NPCID.Golem && npcType != NPCID.DukeFishron)
+            {
+                NPC.SpawnOnPlayer(Main.myPlayer, npcType);
+                return true;
+            }
+
+            Vector2 origin;
+            if (locationMode == 1)
+            {
+                origin = Main.MouseWorld;
+            }
+            else
+            {
+                float dir = player.direction == 0 ? 1f : player.direction;
+                origin = player.Center + new Vector2(dir * 160f, -96f);
+            }
+
+            if (total > 1)
+            {
+                double angle = (index / (double)total) * Math.PI * 2.0;
+                float radius = Math.Min(180f, 24f + (index % 8) * 16f);
+                origin.X += (float)(Math.Cos(angle) * radius);
+                origin.Y += (float)(Math.Sin(angle) * radius * 0.45f);
+            }
+
+            int x = (int)Math.Max(Main.leftWorld + 700f, Math.Min(Main.rightWorld - 700f, origin.X));
+            int y = (int)Math.Max(Main.topWorld + 700f, Math.Min(Main.bottomWorld - 700f, origin.Y));
+
+            IEntitySource source = NPC.GetBossSpawnSource(Main.myPlayer);
+            int idx = NPC.NewNPC(source, x, y, npcType, 0, 0f, 0f, 0f, 0f, Main.myPlayer);
+            return idx >= 0 && idx < Main.maxNPCs;
+        }
+
+        public static void EnqueueButcherHostiles(bool includeBosses)
+        {
+            GameDispatcher.Enqueue(() =>
+            {
+                if (!GameState.TryGetLocalPlayer(out _) || Main.npc == null)
+                {
+                    return;
+                }
+
+                int killed = 0;
+                NPC[] npcs = Main.npc;
+                int limit = Math.Min(Main.maxNPCs, npcs.Length);
+
+                for (int i = 0; i < limit; i++)
+                {
+                    NPC? npc = npcs[i];
+                    if (!EntityChaosEngine.IsHostileNpc(npc) || npc == null)
+                    {
+                        continue;
+                    }
+
+                    if (!includeBosses && (npc.boss || (npc.type < NPCID.Sets.ShouldBeCountedAsBossForBestiary.Length && NPCID.Sets.ShouldBeCountedAsBossForBestiary[npc.type])))
+                    {
+                        continue;
+                    }
+
+                    npc.dontTakeDamage = false;
+                    npc.immortal = false;
+                    int dmg = Math.Max(9999999, npc.lifeMax * 10);
+                    npc.StrikeNPC(dmg, 0f, 0, true, false, Main.myPlayer);
+                    if (npc.active && npc.life > 0)
+                    {
+                        npc.life = 0;
+                        npc.checkDead();
+                    }
+                    killed++;
+                }
+
+                string scope = includeBosses ? "hostiles + bosses" : "hostile NPCs";
+                Main.NewText($"[ModMenu] Butchered {killed} {scope} (with loot)", 248, 113, 113);
+            });
+        }
+
+        public static void EnqueueClearGroundItems()
+        {
+            GameDispatcher.Enqueue(() =>
+            {
+                if (!GameState.TryGetLocalPlayer(out _) || Main.item == null)
+                {
+                    return;
+                }
+
+                int cleared = 0;
+                WorldItem[] items = Main.item;
+                int limit = Math.Min(Main.maxItems, items.Length);
+                for (int i = 0; i < limit; i++)
+                {
+                    WorldItem? wi = items[i];
+                    if (wi != null && wi.active && !wi.IsAir)
+                    {
+                        wi.TurnToAir();
+                        cleared++;
+                    }
+                }
+                Main.NewText($"[ModMenu] Cleared {cleared} ground item(s)", 156, 163, 175);
+            });
         }
 
         private static void GiveKitItem(Player player, int itemId, int stack)

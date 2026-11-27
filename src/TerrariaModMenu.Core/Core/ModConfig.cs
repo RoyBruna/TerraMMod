@@ -119,6 +119,14 @@ namespace TerrariaModMenu.Core.Core
         public volatile int BonusMaxWhipTags = 0;
         public volatile float BonusWhipTagDuration = 0.0f;
 
+        public volatile bool ChaosFreezeEnemies;
+        public volatile bool ChaosEnemyMagnetToCursor;
+        public volatile bool ChaosItemVacuum;
+        public volatile bool HotkeySpawnNpcAtCursor;
+        public volatile int SelectedSpawnNpcId = 4;
+        public volatile int SelectedSpawnNpcCount = 1;
+        public volatile int SelectedSpawnLocationMode = 0;
+
         public bool TryGetRapidFireTicks(ItemCategory category, out int maxTicks)
         {
             switch (category)
@@ -179,6 +187,15 @@ namespace TerrariaModMenu.Core.Core
             WhipSpeedMultiplier = 1.0f;
             BonusMaxWhipTags = 0;
             BonusWhipTagDuration = 0.0f;
+        }
+
+        public void ResetChaosOnly()
+        {
+            SpawnRateMultiplier = 1;
+            ChaosFreezeEnemies = false;
+            ChaosEnemyMagnetToCursor = false;
+            ChaosItemVacuum = false;
+            HotkeySpawnNpcAtCursor = false;
         }
 
         public void ResetAll()
@@ -253,6 +270,7 @@ namespace TerrariaModMenu.Core.Core
 
             ResetFishingOnly();
             ResetSummonerOnly();
+            ResetChaosOnly();
         }
     }
 }

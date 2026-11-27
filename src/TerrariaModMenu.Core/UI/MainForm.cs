@@ -12,6 +12,7 @@ namespace TerrariaModMenu.Core.UI
     {
         private const int VK_INSERT = 0x2D;
         private const int VK_F3 = 0x72;
+        private const int VK_F4 = 0x73;
 
         [DllImport("user32.dll")]
         private static extern short GetAsyncKeyState(int vKey);
@@ -36,6 +37,7 @@ namespace TerrariaModMenu.Core.UI
         private readonly FishingTab _fishingTab;
         private readonly CraftingTab _craftingTab;
         private readonly PotionsTab _potionsTab;
+        private readonly EntitiesChaosTab _entitiesTab;
         private readonly SpawnerWorldTab _spawnerTab;
         private readonly MapTab _mapTab;
         private readonly SettingsTab _settingsTab;
@@ -43,6 +45,7 @@ namespace TerrariaModMenu.Core.UI
         private Control? _activeBody;
         private bool _prevInsertDown;
         private bool _prevF3Down;
+        private bool _prevF4Down;
 
         public MainForm()
         {
@@ -235,6 +238,7 @@ namespace TerrariaModMenu.Core.UI
             _fishingTab = new FishingTab();
             _craftingTab = new CraftingTab();
             _potionsTab = new PotionsTab();
+            _entitiesTab = new EntitiesChaosTab();
             _spawnerTab = new SpawnerWorldTab();
             _mapTab = new MapTab();
             _settingsTab = new SettingsTab(this, ResetAllDefaults, ReloadHooksLive, ToggleHooksAttached, Close);
@@ -247,6 +251,7 @@ namespace TerrariaModMenu.Core.UI
                 ApplySafeModeLock(_fishingTab);
                 ApplySafeModeLock(_craftingTab);
                 ApplySafeModeLock(_potionsTab);
+                ApplySafeModeLock(_entitiesTab);
                 ApplySafeModeLock(_spawnerTab);
                 ApplySafeModeLock(_mapTab);
             }
@@ -277,9 +282,14 @@ namespace TerrariaModMenu.Core.UI
                 DarkTheme.AccentCyan, _mapTab, () => _mapTab.OnTabSelected(), safeMode));
 
             RegisterSection(new SidebarSection(
+                "entities", "World", "Entities & Chaos",
+                "Boss/NPC spawner, 0-100x spawn rate, butcher, freeze, magnet & vacuum",
+                DarkTheme.AccentRed, _entitiesTab, () => _entitiesTab.OnTabSelected(), safeMode));
+
+            RegisterSection(new SidebarSection(
                 "spawner", "World", "Spawner & World",
-                "Item spawner, fullbright, vision toggles, time and spawn rate",
-                DarkTheme.AccentBlue, _spawnerTab, () => _spawnerTab.EnsureCatalogLoaded(), safeMode));
+                "Item spawner, fullbright, vision toggles, time and 0-100x spawn rate",
+                DarkTheme.AccentBlue, _spawnerTab, () => { _spawnerTab.EnsureCatalogLoaded(); _spawnerTab.SyncFromConfig(); }, safeMode));
 
             RegisterSection(new SidebarSection(
                 "fishing", "Tools", "Fishing",
@@ -373,6 +383,7 @@ namespace TerrariaModMenu.Core.UI
             _fishingTab.SyncFromConfig();
             _craftingTab.SyncFromConfig();
             _potionsTab.SyncFromConfig();
+            _entitiesTab.SyncFromConfig();
             _spawnerTab.SyncFromConfig();
         }
 
@@ -504,6 +515,10 @@ namespace TerrariaModMenu.Core.UI
                 {
                     _summonerTab.RefreshTelemetry();
                 }
+                else if (_entitiesTab.Visible)
+                {
+                    _entitiesTab.RefreshTelemetry();
+                }
             }
             catch (Exception ex)
             {
@@ -531,6 +546,14 @@ namespace TerrariaModMenu.Core.UI
                 GameActions.EnqueueTeleportToCursor();
             }
             _prevF3Down = f3Down;
+
+            bool f4Down = (GetAsyncKeyState(VK_F4) & 0x8000) != 0;
+            if (f4Down && !_prevF4Down && ModRuntime.IsFullModeActive && ModConfig.Instance.HotkeySpawnNpcAtCursor)
+            {
+                ModConfig cfg = ModConfig.Instance;
+                GameActions.EnqueueSpawnNpc(cfg.SelectedSpawnNpcId, cfg.SelectedSpawnNpcCount, 1);
+            }
+            _prevF4Down = f4Down;
         }
 
         protected override void OnFormClosing(FormClosingEventArgs e)
