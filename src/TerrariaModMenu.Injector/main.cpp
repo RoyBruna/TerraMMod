@@ -380,6 +380,13 @@ int wmain(int argc, wchar_t* argv[])
     }
 
     const int exitCode = RunInjection(processName, dllPath, mode);
-    PauseIfStandaloneConsole(noPause);
+    if (exitCode != 0)
+    {
+        PauseIfStandaloneConsole(noPause);
+    }
+    else
+    {
+        Sleep(250);
+    }
     return exitCode;
 }

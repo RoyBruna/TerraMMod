@@ -18,6 +18,7 @@ namespace TerrariaModMenu.Core.UI
         private static extern short GetAsyncKeyState(int vKey);
 
         private readonly Timer _telemetryTimer;
+        private Timer? _fadeInTimer;
         private readonly Label _lblStateBadge;
         private readonly Label _lblHooksBadge;
         private readonly Label _lblPlayerInfo;
@@ -315,6 +316,25 @@ namespace TerrariaModMenu.Core.UI
             _telemetryTimer = new Timer { Interval = 100 };
             _telemetryTimer.Tick += (_, _) => OnTimerTick();
             _telemetryTimer.Start();
+
+            Opacity = 0.0;
+            _fadeInTimer = new Timer { Interval = 16 };
+            _fadeInTimer.Tick += (_, _) =>
+            {
+                double next = Opacity + 0.09;
+                if (next >= 1.0)
+                {
+                    Opacity = 1.0;
+                    _fadeInTimer?.Stop();
+                    _fadeInTimer?.Dispose();
+                    _fadeInTimer = null;
+                }
+                else
+                {
+                    Opacity = next;
+                }
+            };
+            _fadeInTimer.Start();
         }
 
         private void RegisterSection(SidebarSection section)
@@ -560,6 +580,9 @@ namespace TerrariaModMenu.Core.UI
         {
             try
             {
+                _fadeInTimer?.Stop();
+                _fadeInTimer?.Dispose();
+                _fadeInTimer = null;
                 _telemetryTimer.Stop();
                 _telemetryTimer.Dispose();
                 ModConfig.Instance.ResetAll();
